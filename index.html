@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeafyLife | Nature's Finest Tableware</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --nat-green: #5D7C52;
+            --leaf-bright: #A4C639;
+            --soft-earth: #FAF9F6;
+            --sand: #E6DFD3;
+            --bark: #4A3728;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--soft-earth);
+            color: var(--bark);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Artisan Grain Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        h1, h2, h3, .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .organic-shape {
+            border-radius: 60% 40% 70% 30% / 30% 70% 30% 70%;
+        }
+
+        /* Hero Branch Animation */
+        .branch-grow {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .leaf-appear {
+            opacity: 0;
+            transform: scale(0);
+            animation: leafIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes leafIn {
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Advanced Tree Swaying */
+        .tree-layer-1 { animation: sway 15s ease-in-out infinite; }
+        .tree-layer-2 { animation: sway 22s ease-in-out infinite reverse; }
+        .tree-layer-3 { animation: sway 30s ease-in-out infinite; }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg) translateX(0); }
+            50% { transform: rotate(2deg) translateX(10px); }
+        }
+
+        /* Hand Pressing Animation */
+        @keyframes handPress {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(40px); }
+        }
+        .animate-hand {
+            animation: handPress 4s ease-in-out infinite;
+        }
+
+        /* Water Droplet Slide */
+        .dew-drop {
+            position: fixed;
+            width: 4px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(1px);
+            z-index: 100;
+            animation: slideDown 8s linear infinite;
+        }
+
+        @keyframes slideDown {
+            0% { transform: translateY(-10vh) scaleY(1); opacity: 0; }
+            5% { opacity: 0.8; }
+            100% { transform: translateY(110vh) scaleY(2); opacity: 0; }
+        }
+
+        /* Ripple Effect on Click */
+        .ripple {
+            position: absolute;
+            border: 2px solid var(--nat-green);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-out 0.8s ease-out;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        @keyframes ripple-out {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        .btn-leaf {
+            background: linear-gradient(135deg, #5D7C52 0%, #8BA888 100%);
+            color: white;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 18px 4px 18px 4px;
+        }
+
+        .btn-leaf:hover {
+            transform: translateY(-5px) rotate(-1deg);
+            box-shadow: 0 15px 30px -10px rgba(93, 124, 82, 0.4);
+            border-radius: 4px 18px 4px 18px;
+        }
+
+        .floating-leaf {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
+            animation: fall var(--duration) linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(var(--scale)); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(110vh) translateX(200px) rotate(720deg) scale(var(--scale)); opacity: 0; }
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #4A3728 0%, #A4C639 50%, #4A3728 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 8s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+</head>
+<body>
+    <!-- Background Forest Layer 3 (Deepest) -->
+    <div class="fixed bottom-0 left-0 w-full h-full -z-30 opacity-[0.03] pointer-events-none">
+        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-3">
+            <path d="M100,1000 Q150,500 100,0" stroke="#5D7C52" stroke-width="20" fill="none"/>
+            <path d="M400,1000 Q350,600 400,100" stroke="#5D7C52" stroke-width="15" fill="none"/>
+            <path d="M800,1000 Q850,400 800,0" stroke="#5D7C52" stroke-width="25" fill="none"/>
+        </svg>
+    </div>
+
+    <!-- Background Forest Layer 2 -->
+    <div class="fixed bottom-0 left-0 w-full h-full -z-20 opacity-[0.05] pointer-events-none">
+        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-2">
+            <path d="M250,1000 Q300,400 250,0" stroke="#5D7C52" stroke-width="10" fill="none"/>
+            <path d="M650,1000 Q600,300 650,50" stroke="#5D7C52" stroke-width="12" fill="none"/>
+        </svg>
+    </div>
+
+    <!-- Foreground Forest Layer 1 -->
+    <div class="fixed bottom-0 left-0 w-full h-full -z-10 opacity-[0.08] pointer-events-none">
+        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-1">
+            <path d="M500,1000 L500,200" stroke="#5D7C52" stroke-width="8" fill="none"/>
+            <circle cx="500" cy="200" r="150" fill="#A4C639" opacity="0.2"/>
+        </svg>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+        // Global Click Ripple
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = `${e.clientX - 25}px`;
+            ripple.style.top = `${e.clientY - 25}px`;
+            ripple.style.width = '50px';
+            ripple.style.height = '50px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 800);
+        });
+
+        // Procedural Dew Drops
+        setInterval(() => {
+            const drop = document.createElement('div');
+            drop.className = 'dew-drop';
+            drop.style.left = `${Math.random() * 100}vw`;
+            drop.style.animationDuration = `${5 + Math.random() * 5}s`;
+            drop.style.opacity = Math.random() * 0.5;
+            document.body.appendChild(drop);
+            setTimeout(() => drop.remove(), 10000);
+        }, 3000);
+    </script>
+</body>
+</html>
