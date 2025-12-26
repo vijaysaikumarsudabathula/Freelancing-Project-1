@@ -44,4 +44,4 @@ export interface User {
   role: UserRole;
 }
 
-export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders';
+export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders' | 'bulk-enquiry';

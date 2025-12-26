@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeafyLife | Nature's Finest Tableware</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -88,25 +89,6 @@
             animation: handPress 4s ease-in-out infinite;
         }
 
-        /* Water Droplet Slide */
-        .dew-drop {
-            position: fixed;
-            width: 4px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(1px);
-            z-index: 100;
-            animation: slideDown 8s linear infinite;
-        }
-
-        @keyframes slideDown {
-            0% { transform: translateY(-10vh) scaleY(1); opacity: 0; }
-            5% { opacity: 0.8; }
-            100% { transform: translateY(110vh) scaleY(2); opacity: 0; }
-        }
-
         /* Ripple Effect on Click */
         .ripple {
             position: absolute;
@@ -135,18 +117,16 @@
             border-radius: 4px 18px 4px 18px;
         }
 
-        .floating-leaf {
-            position: fixed;
-            z-index: 100;
-            pointer-events: none;
-            animation: fall var(--duration) linear infinite;
+        /* Enhanced Shimmer for Skeletons */
+        @keyframes skeleton-shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
-        @keyframes fall {
-            0% { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(var(--scale)); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateY(110vh) translateX(200px) rotate(720deg) scale(var(--scale)); opacity: 0; }
+        .shimmer-bg {
+            background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 2s infinite linear;
         }
 
         .shimmer-text {
@@ -174,35 +154,8 @@
 </script>
 </head>
 <body>
-    <!-- Background Forest Layer 3 (Deepest) -->
-    <div class="fixed bottom-0 left-0 w-full h-full -z-30 opacity-[0.03] pointer-events-none">
-        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-3">
-            <path d="M100,1000 Q150,500 100,0" stroke="#5D7C52" stroke-width="20" fill="none"/>
-            <path d="M400,1000 Q350,600 400,100" stroke="#5D7C52" stroke-width="15" fill="none"/>
-            <path d="M800,1000 Q850,400 800,0" stroke="#5D7C52" stroke-width="25" fill="none"/>
-        </svg>
-    </div>
-
-    <!-- Background Forest Layer 2 -->
-    <div class="fixed bottom-0 left-0 w-full h-full -z-20 opacity-[0.05] pointer-events-none">
-        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-2">
-            <path d="M250,1000 Q300,400 250,0" stroke="#5D7C52" stroke-width="10" fill="none"/>
-            <path d="M650,1000 Q600,300 650,50" stroke="#5D7C52" stroke-width="12" fill="none"/>
-        </svg>
-    </div>
-
-    <!-- Foreground Forest Layer 1 -->
-    <div class="fixed bottom-0 left-0 w-full h-full -z-10 opacity-[0.08] pointer-events-none">
-        <svg viewBox="0 0 1000 1000" class="w-full h-full tree-layer-1">
-            <path d="M500,1000 L500,200" stroke="#5D7C52" stroke-width="8" fill="none"/>
-            <circle cx="500" cy="200" r="150" fill="#A4C639" opacity="0.2"/>
-        </svg>
-    </div>
-
     <div id="root"></div>
-
     <script>
-        // Global Click Ripple
         document.addEventListener('click', (e) => {
             const ripple = document.createElement('div');
             ripple.className = 'ripple';
@@ -213,17 +166,6 @@
             document.body.appendChild(ripple);
             setTimeout(() => ripple.remove(), 800);
         });
-
-        // Procedural Dew Drops
-        setInterval(() => {
-            const drop = document.createElement('div');
-            drop.className = 'dew-drop';
-            drop.style.left = `${Math.random() * 100}vw`;
-            drop.style.animationDuration = `${5 + Math.random() * 5}s`;
-            drop.style.opacity = Math.random() * 0.5;
-            document.body.appendChild(drop);
-            setTimeout(() => drop.remove(), 10000);
-        }, 3000);
     </script>
 </body>
 </html>

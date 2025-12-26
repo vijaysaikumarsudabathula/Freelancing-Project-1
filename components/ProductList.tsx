@@ -10,8 +10,10 @@ interface ProductListProps {
   isLoading?: boolean;
 }
 
-const Skeleton: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={`animate-pulse bg-[#5D7C52]/5 rounded-xl ${className}`}></div>
+const Skeleton: React.FC<{ className?: string, circle?: boolean }> = ({ className, circle }) => (
+  <div className={`relative overflow-hidden bg-[#5D7C52]/5 ${circle ? 'rounded-full' : 'rounded-2xl'} ${className}`}>
+    <div className="absolute inset-0 shimmer-bg"></div>
+  </div>
 );
 
 const ProductList: React.FC<ProductListProps> = ({ 
@@ -22,10 +24,10 @@ const ProductList: React.FC<ProductListProps> = ({
   isLoading = false
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const categories = [
@@ -47,10 +49,6 @@ const ProductList: React.FC<ProductListProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const toggleDescription = (id: string) => {
-    setExpandedDescriptions(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const handleImageLoad = (id: string) => {
     setLoadedImages(prev => ({ ...prev, [id]: true }));
   };
@@ -58,18 +56,13 @@ const ProductList: React.FC<ProductListProps> = ({
   const handleAddToCart = (product: Product) => {
     setAddingToCartId(product.id);
     onAddToCart(product);
-    // Reset state after 2 seconds
     setTimeout(() => {
       setAddingToCartId(null);
     }, 2000);
   };
 
-  const getProductCount = (categoryId: string) => {
-    return products.filter(p => {
-      if (categoryId === 'all') return true;
-      if (categoryId === 'wishlist') return wishlist.includes(p.id);
-      return p.category === categoryId;
-    }).length;
+  const toggleDescription = (id: string) => {
+    setExpandedDescriptions(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const filteredProducts = products.filter(p => {
@@ -85,37 +78,45 @@ const ProductList: React.FC<ProductListProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row justify-between items-start mb-24 gap-12">
           <div className="max-w-xl">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#A4C639] mb-4 block">Seasonal Selection</span>
-            <h2 className="text-5xl md:text-6xl font-bold text-[#4A3728] mb-6 serif leading-tight">Tableware for <br /><span className="italic font-normal">Modern Living.</span></h2>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#A4C639] mb-4 block">Nature's Best</span>
+            <h2 className="text-5xl md:text-6xl font-bold text-[#4A3728] mb-6 serif leading-tight">Artisanal Choice <br /><span className="italic font-normal">Eco Tableware.</span></h2>
             <p className="text-[#5D7C52] font-medium text-lg leading-relaxed">
-              Explore our curated collection of Areca artifacts, crafted with the precision of nature and the heart of heritage.
+              Every piece supports a circular economy. Clearly crafted for sustainability.
             </p>
           </div>
           
-          <div className="w-full lg:w-auto space-y-10">
+          <div className="w-full lg:w-auto self-end">
             <div className="relative" ref={dropdownRef}>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#A4C639] mb-3 block">Filter by Category</span>
+              <div className="mb-3 ml-6">
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#A4C639]">Filter by Category</span>
+              </div>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`w-full lg:w-80 flex items-center justify-between px-8 py-5 rounded-[1.5rem] bg-white border-2 transition-all shadow-sm hover:shadow-lg ${isDropdownOpen ? 'border-[#5D7C52] ring-4 ring-[#5D7C52]/5' : 'border-[#5D7C52]/10'}`}
+                className={`group w-full lg:w-[340px] flex items-center justify-between p-2 pr-8 rounded-[2rem] bg-white border-2 transition-all shadow-xl hover:shadow-[#A4C639]/10 ${isDropdownOpen ? 'border-[#5D7C52] ring-4 ring-[#5D7C52]/5' : 'border-[#5D7C52]/10'}`}
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-xl opacity-70">{activeCategoryData.icon}</span>
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center text-2xl shadow-inner transition-colors ${isDropdownOpen ? 'bg-[#5D7C52] text-white' : 'bg-[#FAF9F6] text-[#5D7C52]'}`}>
+                    {activeCategoryData.icon}
+                  </div>
                   <div className="text-left">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#4A3728]">{activeCategoryData.label}</span>
-                    <span className="block text-[8px] font-bold text-[#A4C639] uppercase tracking-tighter">
-                      {isLoading ? 'Scanning forest...' : `${getProductCount(activeCategory)} Artifacts found`}
+                    <span className="text-[11px] font-black uppercase tracking-widest text-[#4A3728] block leading-none mb-1">
+                      {activeCategoryData.label}
+                    </span>
+                    <span className="text-[9px] font-bold text-[#A4C639] uppercase tracking-widest opacity-80">
+                      Explore artifacts
                     </span>
                   </div>
                 </div>
-                <svg className={`w-4 h-4 text-[#5D7C52] transition-transform duration-500 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                </svg>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-transform duration-500 ${isDropdownOpen ? 'rotate-180 border-[#5D7C52] bg-[#5D7C52] text-white' : 'border-[#5D7C52]/10 group-hover:border-[#5D7C52]/30'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-3 w-full bg-white rounded-[2.5rem] shadow-2xl border border-[#5D7C52]/10 p-4 z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="space-y-1 max-h-[400px] overflow-y-auto custom-scrollbar">
+                <div className="absolute top-full left-0 mt-4 w-full bg-white rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(74,55,40,0.2)] border border-[#5D7C52]/10 p-4 z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="grid grid-cols-1 gap-2">
                     {categories.map(cat => (
                       <button
                         key={cat.id}
@@ -123,21 +124,19 @@ const ProductList: React.FC<ProductListProps> = ({
                           setActiveCategory(cat.id);
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all ${
+                        className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all group/item ${
                           activeCategory === cat.id 
-                            ? 'bg-[#5D7C52] text-white shadow-md' 
+                            ? 'bg-[#5D7C52] text-white' 
                             : 'text-[#5D7C52] hover:bg-[#FAF9F6]'
                         }`}
                       >
-                        <span className="flex items-center gap-4">
-                          <span className="text-xl">{cat.icon}</span>
+                        <span className="flex items-center gap-5">
+                          <span className={`text-xl transition-transform group-hover/item:scale-125 ${activeCategory === cat.id ? 'scale-110' : ''}`}>{cat.icon}</span>
                           <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
                         </span>
-                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md ${
-                          activeCategory === cat.id ? 'bg-white/20' : 'bg-[#5D7C52]/5'
-                        }`}>
-                          {getProductCount(cat.id)}
-                        </span>
+                        {activeCategory === cat.id && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]"></div>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -148,152 +147,139 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col h-full bg-white rounded-[3rem] p-6 border border-[#5D7C52]/5 shadow-sm">
-                <Skeleton className="h-[24rem] organic-shape mb-8" />
-                <div className="px-2 space-y-4 mb-8">
+              <div key={i} className="bg-white rounded-[3rem] p-8 h-[550px] border border-[#5D7C52]/5 flex flex-col">
+                <Skeleton className="w-full h-64 mb-8 organic-shape" />
+                <div className="space-y-4 flex-1">
                   <div className="flex justify-between items-start">
-                    <Skeleton className="h-8 w-40" />
-                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-6 w-1/4 ml-4" />
                   </div>
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-16 w-full" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-20" />
-                  </div>
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-20 w-full" />
                 </div>
-                <Skeleton className="h-14 w-full mt-auto" />
+                <Skeleton className="h-16 w-full mt-auto" />
               </div>
             ))}
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="py-32 text-center glass-card border-dashed border-[#5D7C52]/20 animate-fade-in">
-            <div className="text-7xl mb-6 opacity-30">{activeCategory === 'wishlist' ? '❤️' : '🍃'}</div>
-            <h3 className="text-2xl font-bold serif text-[#4A3728] mb-2">
-              {activeCategory === 'wishlist' ? 'Your Wishlist is Empty' : 'No items match your criteria'}
-            </h3>
-            <p className="text-[#5D7C52]/60 font-medium">
-              Try adjusting your filters to discover more sustainable treasures.
-            </p>
-            <button 
-              onClick={() => { setActiveCategory('all'); }}
-              className="mt-8 text-[10px] font-black uppercase tracking-[0.3em] text-[#A4C639] border-b-2 border-[#A4C639]/30 pb-1 hover:text-[#5D7C52] hover:border-[#5D7C52] transition-all"
-            >
-              Reset Category
-            </button>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
             {filteredProducts.map(product => {
               const isWishlisted = wishlist.includes(product.id);
-              const isExpanded = expandedDescriptions[product.id];
-              const isImageLoaded = loadedImages[product.id];
               const isRecentlyAdded = addingToCartId === product.id;
+              const isImageLoaded = loadedImages[product.id];
+              const isExpanded = expandedDescriptions[product.id];
+              const hasLongDescription = product.description && product.description.length > 100;
               
               return (
-                <div key={product.id} className="group flex flex-col h-full animate-fade-in bg-white rounded-[3rem] p-6 shadow-sm hover:shadow-2xl transition-all duration-500 border border-[#5D7C52]/5">
-                  <div className="relative h-[24rem] mb-8 overflow-hidden organic-shape shadow-lg bg-white border-4 border-white transition-all duration-700">
-                    {!isImageLoaded && <Skeleton className="absolute inset-0 z-10 w-full h-full" />}
+                <div key={product.id} className="group flex flex-col h-full bg-white rounded-[3rem] p-8 shadow-sm hover:shadow-2xl transition-all duration-500 border border-[#5D7C52]/5 animate-in fade-in zoom-in duration-500">
+                  <div className="relative h-64 mb-8 overflow-hidden organic-shape shadow-lg bg-[#FAF9F6] border-4 border-white">
+                    {!isImageLoaded && <Skeleton className="absolute inset-0 z-10" />}
                     
                     <img 
                       src={product.image} 
                       alt={product.name} 
                       onLoad={() => handleImageLoad(product.id)}
-                      className={`w-full h-full object-cover transition-all duration-[800ms] cubic-bezier(0.25, 0.46, 0.45, 0.94) group-hover:scale-[1.12] group-hover:brightness-[1.05] ${
-                        isImageLoaded ? 'opacity-100' : 'opacity-0'
-                      }`}
+                      className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${isImageLoaded ? 'opacity-100' : 'opacity-0 scale-95'}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#4A3728]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     
                     <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleWishlist?.(product.id);
-                      }}
-                      className={`absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl z-20 ${
-                        isWishlisted 
-                          ? 'bg-red-500 text-white scale-110' 
-                          : 'bg-white/90 backdrop-blur-md text-[#5D7C52] hover:bg-white hover:scale-110'
-                      }`}
+                      onClick={(e) => { e.stopPropagation(); onToggleWishlist?.(product.id); }}
+                      className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all z-20 ${isWishlisted ? 'bg-red-500 text-white shadow-lg' : 'bg-white/90 text-[#5D7C52] hover:bg-white'}`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={isWishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={isWishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                   </div>
                   
-                  <div className="flex-1 px-2 mb-8">
+                  <div className="flex-1 px-2 mb-4">
                     <div className="flex justify-between items-start mb-4">
                       <div className="max-w-[70%]">
-                        <h3 className="text-2xl font-bold serif text-[#4A3728] leading-tight mb-1">{product.name}</h3>
+                        <h3 className="text-xl font-bold serif text-[#4A3728] leading-tight mb-1">{product.name}</h3>
                         <span className="text-[9px] font-black uppercase tracking-widest text-[#A4C639]">{product.category}</span>
                       </div>
                       <span className="text-2xl font-bold text-[#5D7C52] serif">₹{product.price}</span>
                     </div>
 
-                    <div className="relative">
-                      <p className={`text-[#5D7C52]/70 text-sm leading-relaxed mb-2 italic transition-all duration-500 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                        {product.description}
-                      </p>
-                      <button 
-                        onClick={() => toggleDescription(product.id)}
-                        className="text-[9px] font-black uppercase tracking-widest text-[#A4C639] hover:text-[#5D7C52] transition-colors mb-6"
-                      >
-                        {isExpanded ? 'Show Less' : 'Read More Details'}
-                      </button>
+                    <div className={`transition-all duration-500 ${isExpanded ? 'mb-4' : 'h-[4.5rem] mb-4'} relative overflow-hidden`}>
+                      {(!product.description || product.description === "") ? (
+                        <div className="space-y-3 py-2">
+                          <Skeleton className="h-3 w-full" />
+                          <Skeleton className="h-3 w-[90%]" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      ) : (
+                        <div>
+                          <p className={`text-[#5D7C52]/70 text-sm leading-relaxed italic transition-all duration-500 ${isExpanded ? 'opacity-100' : 'line-clamp-3'}`}>
+                            {product.description}
+                          </p>
+                          {hasLongDescription && (
+                            <button 
+                              onClick={() => toggleDescription(product.id)}
+                              className="mt-3 text-[10px] font-black uppercase tracking-widest text-[#A4C639] hover:text-[#5D7C52] transition-colors flex items-center gap-1 group"
+                            >
+                              {isExpanded ? 'Read Less' : 'Read More'}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {product.benefits.map((benefit, i) => (
-                        <span key={i} className="text-[8px] font-black uppercase tracking-[0.2em] text-[#5D7C52] bg-[#FAF9F6] border border-[#5D7C52]/10 px-3 py-1.5 rounded-lg shadow-sm">
-                          {benefit}
-                        </span>
-                      ))}
-                    </div>
+                    {product.benefits && product.benefits.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#5D7C52]/5">
+                        {product.benefits.map((benefit, bIdx) => (
+                          <div 
+                            key={bIdx}
+                            className="group/benefit relative flex items-center gap-1.5 px-3 py-1.5 bg-[#A4C639]/10 rounded-full border border-transparent hover:border-[#A4C639]/30 transition-all cursor-default"
+                          >
+                            <svg className="w-3 h-3 text-[#5D7C52]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-[#5D7C52]">
+                              {benefit}
+                            </span>
+                            
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#4A3728] text-white text-[8px] rounded opacity-0 group-hover/benefit:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              Verified Heritage Standard
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="relative group/btn">
+                  <div className="mt-auto pt-6 border-t border-[#5D7C52]/5">
                     <button 
                       onClick={() => handleAddToCart(product)}
                       disabled={isRecentlyAdded}
-                      className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-xl mt-auto transition-all duration-700 flex items-center justify-center gap-3 transform active:scale-90 relative overflow-hidden ${
+                      className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-xl transition-all duration-300 flex items-center justify-center gap-3 transform active:scale-95 ${
                         isRecentlyAdded 
-                          ? 'bg-[#5D7C52] text-white scale-[1.05] shadow-[#5D7C52]/30 cursor-default' 
-                          : 'bg-[#A4C639] hover:bg-[#5D7C52] text-white hover:shadow-[#A4C639]/40 border-2 border-white/20'
+                          ? 'bg-[#5D7C52] text-white cursor-default' 
+                          : 'bg-[#A4C639] hover:bg-[#5D7C52] text-white hover:shadow-[#A4C639]/40'
                       }`}
                     >
                       {isRecentlyAdded ? (
-                        <div className="flex items-center gap-2 animate-in zoom-in spin-in-1 duration-500 z-10">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                        <div className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Added to Bag!
+                          Processing...
                         </div>
                       ) : (
                         <>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
                           Add to Cart
                         </>
                       )}
-                      
-                      {isRecentlyAdded && (
-                        <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full">
-                          <div className="h-full bg-white animate-[progress_2s_linear_forwards]"></div>
-                        </div>
-                      )}
                     </button>
-                    
-                    {/* Visual burst effect on click */}
-                    {isRecentlyAdded && (
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-[#A4C639] rounded-full animate-[burst_0.6s_ease-out_forwards]"></div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-[#5D7C52] rounded-full animate-[burst_0.6s_ease-out_0.1s_forwards]"></div>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -301,16 +287,6 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         )}
       </div>
-      <style>{`
-        @keyframes progress {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-        @keyframes burst {
-          0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
-          100% { transform: translate(-50%, -50%) scale(40); opacity: 0; }
-        }
-      `}</style>
     </section>
   );
 };

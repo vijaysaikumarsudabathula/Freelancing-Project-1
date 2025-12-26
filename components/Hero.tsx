@@ -1,7 +1,24 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+const HERO_IMAGES = [
+  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1200',
+  'https://images.unsplash.com/photo-1616612693441-17f160683050?auto=format&fit=crop&q=80&w=1200',
+  'https://images.unsplash.com/photo-1591871937573-748af09698d7?auto=format&fit=crop&q=80&w=1200',
+  'https://images.unsplash.com/photo-1584346133934-a3afd2a33c4c?auto=format&fit=crop&q=80&w=1200',
+  'https://images.unsplash.com/photo-1518013391915-e44359846ffb?auto=format&fit=crop&q=80&w=1200'
+];
 
 const Hero: React.FC = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 5000); // Change image every 5 seconds
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <section className="relative min-h-[95vh] flex items-center overflow-hidden px-4 py-20 lg:py-32">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center w-full relative">
@@ -31,7 +48,10 @@ const Hero: React.FC = () => {
           
           <h1 className="text-6xl md:text-8xl font-bold leading-[0.95] mb-8 serif text-[#4A3728]">
             Spirit of <br /> 
-            <span className="shimmer-text italic font-normal">the Forest.</span>
+            <span className="relative inline-block mt-2">
+              <span className="relative z-10 italic font-normal">the Forest.</span>
+              <span className="absolute bottom-[5%] left-[-5%] w-[110%] h-[50%] bg-[#A4C639] opacity-80 -z-0 rounded-sm"></span>
+            </span>
           </h1>
           
           <p className="text-lg md:text-xl mb-12 max-w-lg text-[#5D7C52] font-medium leading-relaxed">
@@ -50,7 +70,7 @@ const Hero: React.FC = () => {
               </svg>
             </button>
             <button 
-              className="px-10 py-5 border-2 border-[#5D7C52]/20 rounded-2xl text-sm font-bold uppercase tracking-widest text-[#5D7C52] hover:bg-[#5D7C52]/5 transition-all"
+              className="px-10 py-5 border-2 border-[#5D7C52]/20 rounded-2xl text-sm font-bold uppercase tracking-widest text-[#5D7C52] hover:bg-[#5D7C52]/5 transition-all bg-white/50 backdrop-blur-sm"
             >
               Our Heritage
             </button>
@@ -60,11 +80,15 @@ const Hero: React.FC = () => {
         {/* Hero Image & Artisan Hand Animation */}
         <div className="relative h-[450px] md:h-[600px] animate-fade-in [animation-delay:0.4s]">
           <div className="absolute inset-0 organic-shape overflow-hidden shadow-2xl border-[12px] border-white/50 backdrop-blur-sm group">
-            <img 
-              src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1200" 
-              alt="Sustainable tableware" 
-              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-            />
+            {HERO_IMAGES.map((img, idx) => (
+              <img 
+                key={img}
+                src={img} 
+                alt={`Sustainable tableware ${idx + 1}`} 
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${idx === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+              />
+            ))}
+            
             {/* Hand-Press Overlay Animation */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[#5D7C52]/10 pointer-events-none">
               <svg viewBox="0 0 200 200" className="w-32 h-32 text-white/40 animate-hand">
@@ -76,12 +100,12 @@ const Hero: React.FC = () => {
           </div>
           
           {/* Floating Artisan Tag */}
-          <div className="absolute -bottom-6 -right-6 glass-card p-6 shadow-xl border-[#A4C639]/30 bg-white/80 backdrop-blur-md">
+          <div className="absolute -bottom-6 -right-6 glass-card p-6 shadow-xl border-[#A4C639]/30 bg-white/80 backdrop-blur-md z-20">
             <div className="flex flex-col">
                <span className="text-[8px] font-black uppercase tracking-[0.4em] text-[#A4C639] mb-1">Naturally Sourced</span>
                <span className="text-lg font-bold serif text-[#4A3728]">Areca Artifact</span>
                <div className="flex gap-1 mt-2">
-                 {[1,2,3,4,5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#A4C639]"></div>)}
+                 {[1,2,3,4,5].map(i => <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${i-1 === currentImageIndex ? 'bg-[#5D7C52]' : 'bg-[#A4C639]'}`}></div>)}
                </div>
             </div>
           </div>

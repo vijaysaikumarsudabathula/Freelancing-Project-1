@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -19,7 +19,22 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemove,
   onCheckout
 }) => {
+  const [removalNotification, setRemovalNotification] = useState<string | null>(null);
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  useEffect(() => {
+    if (removalNotification) {
+      const timer = setTimeout(() => {
+        setRemovalNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [removalNotification]);
+
+  const handleRemove = (item: CartItem) => {
+    setRemovalNotification(`${item.name} removed from basket.`);
+    onRemove(item.id);
+  };
 
   if (!isOpen) return null;
 
@@ -36,38 +51,57 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
           </button>
         </div>
 
+        {/* Removal Confirmation Message */}
+        {removalNotification && (
+          <div className="bg-[#A4C639]/10 border-b border-[#A4C639]/20 px-6 py-3 flex items-center justify-between animate-in slide-in-from-top duration-300">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-[#A4C639] rounded-full"></div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#2D5A27]">{removalNotification}</p>
+            </div>
+            <button onClick={() => setRemovalNotification(null)} className="text-[#2D5A27]/40 hover:text-[#2D5A27]">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {items.length === 0 ? (
-            <div className="text-center py-20">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              <p className="text-gray-500">Your basket is empty. Add some nature to your home!</p>
+            <div className="text-center py-20 animate-in fade-in zoom-in duration-500">
+              <div className="w-24 h-24 bg-[#F9F8F3] organic-shape flex items-center justify-center mx-auto mb-6 text-4xl opacity-50 grayscale">
+                🌿
+              </div>
+              <p className="text-gray-400 font-medium italic">Your basket is empty. <br />Add some nature to your home!</p>
             </div>
           ) : (
             items.map(item => (
-              <div key={item.id} className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-[#2D5A27]/20 transition-colors bg-[#F9F8F3]/50">
-                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg" />
+              <div key={item.id} className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-[#2D5A27]/20 transition-all bg-[#F9F8F3]/50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg shadow-sm" />
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">{item.name}</h3>
-                  <p className="text-[#2D5A27] font-semibold">₹{item.price}</p>
-                  <div className="flex items-center gap-3 mt-2">
+                  <h3 className="font-bold text-gray-900 leading-tight">{item.name}</h3>
+                  <p className="text-[#2D5A27] font-semibold mt-1">₹{item.price}</p>
+                  <div className="flex items-center gap-3 mt-3">
                     <button 
                       onClick={() => onUpdateQuantity(item.id, -1)}
-                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-white hover:border-[#2D5A27] transition-all text-[#2D5A27]"
                     >
                       -
                     </button>
-                    <span className="font-medium">{item.quantity}</span>
+                    <span className="font-bold text-sm min-w-[20px] text-center">{item.quantity}</span>
                     <button 
                       onClick={() => onUpdateQuantity(item.id, 1)}
-                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-white hover:border-[#2D5A27] transition-all text-[#2D5A27]"
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <button onClick={() => onRemove(item.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                <button 
+                  onClick={() => handleRemove(item)} 
+                  className="text-gray-300 hover:text-red-500 transition-colors p-2 self-start"
+                  title="Remove Item"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -78,20 +112,23 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
         </div>
 
         {items.length > 0 && (
-          <div className="p-6 border-t bg-[#F9F8F3]">
+          <div className="p-6 border-t bg-[#F9F8F3] shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-gray-600 text-lg">Total Amount:</span>
-              <span className="text-3xl font-bold text-[#2D5A27]">₹{total}</span>
+              <span className="text-gray-600 text-sm font-bold uppercase tracking-widest opacity-60">Total Amount</span>
+              <span className="text-3xl font-bold text-[#2D5A27] serif">₹{total}</span>
             </div>
             <button 
               onClick={onCheckout}
-              className="w-full bg-[#2D5A27] hover:bg-[#1a3817] text-white py-4 rounded-xl text-lg font-bold transition-all shadow-lg hover:shadow-[#2D5A27]/20 flex items-center justify-center gap-2"
+              className="w-full bg-[#2D5A27] hover:bg-[#1a3817] text-white py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-xl hover:shadow-[#2D5A27]/30 flex items-center justify-center gap-3 active:scale-[0.98]"
             >
-              Secure Checkout
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
+              Secure Checkout
             </button>
+            <p className="text-[8px] text-center text-[#2D5A27]/40 font-bold uppercase tracking-[0.2em] mt-4">
+              Sustainability guaranteed with every order
+            </p>
           </div>
         )}
       </div>
