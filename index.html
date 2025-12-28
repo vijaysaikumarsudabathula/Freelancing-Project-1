@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeafyLife | Nature's Finest Tableware</title>
+    <title>Deepthi Enterprises | Caring Environment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,11 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --nat-green: #5D7C52;
+            --nat-green: #2D5A27;
             --leaf-bright: #A4C639;
             --soft-earth: #FAF9F6;
             --sand: #E6DFD3;
             --bark: #4A3728;
+            --sky-blue: #72CFF9;
         }
 
         body {
@@ -36,7 +37,7 @@
             width: 100%;
             height: 100%;
             background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
-            opacity: 0.4;
+            opacity: 0.3;
             pointer-events: none;
             z-index: 9999;
         }
@@ -80,6 +81,31 @@
             50% { transform: rotate(2deg) translateX(10px); }
         }
 
+        /* Falling Leaf Animations */
+        @keyframes leafFall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes leafSway {
+            0%, 100% { margin-left: -50px; }
+            50% { margin-left: 50px; }
+        }
+
+        .falling-leaf {
+            position: absolute;
+            top: -10vh;
+            z-index: 5;
+            pointer-events: none;
+            animation: leafFall linear infinite;
+        }
+
+        .sway-wrapper {
+            animation: leafSway ease-in-out infinite;
+        }
+
         /* Hand Pressing Animation */
         @keyframes handPress {
             0%, 100% { transform: translateY(0); }
@@ -105,7 +131,7 @@
         }
 
         .btn-leaf {
-            background: linear-gradient(135deg, #5D7C52 0%, #8BA888 100%);
+            background: linear-gradient(135deg, var(--nat-green) 0%, var(--bark) 100%);
             color: white;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-radius: 18px 4px 18px 4px;
@@ -113,7 +139,7 @@
 
         .btn-leaf:hover {
             transform: translateY(-5px) rotate(-1deg);
-            box-shadow: 0 15px 30px -10px rgba(93, 124, 82, 0.4);
+            box-shadow: 0 15px 30px -10px rgba(74, 90, 39, 0.4);
             border-radius: 4px 18px 4px 18px;
         }
 
@@ -130,7 +156,7 @@
         }
 
         .shimmer-text {
-            background: linear-gradient(90deg, #4A3728 0%, #A4C639 50%, #4A3728 100%);
+            background: linear-gradient(90deg, var(--bark) 0%, var(--leaf-bright) 50%, var(--bark) 100%);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;

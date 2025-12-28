@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Product } from '../types';
+import { Product, Language } from '../types';
 
 interface ProductListProps {
   products: Product[];
@@ -8,7 +8,10 @@ interface ProductListProps {
   wishlist?: string[];
   onToggleWishlist?: (productId: string) => void;
   isLoading?: boolean;
+  lang?: Language;
 }
+
+const ITEMS_PER_PAGE = 12;
 
 const Skeleton: React.FC<{ className?: string, circle?: boolean }> = ({ className, circle }) => (
   <div className={`relative overflow-hidden bg-[#5D7C52]/5 ${circle ? 'rounded-full' : 'rounded-2xl'} ${className}`}>
@@ -21,22 +24,45 @@ const ProductList: React.FC<ProductListProps> = ({
   onAddToCart, 
   wishlist = [], 
   onToggleWishlist,
-  isLoading = false
+  isLoading = false,
+  lang = 'en'
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [showToast, setShowToast] = useState<string | null>(null);
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  const t = {
+    en: {
+      bestFromNature: "Best from nature",
+      title1: "Our Items",
+      title2: "Real and Clean.",
+      desc: "Find plates, bowls, and food that are 100% natural and good for you.",
+      added: "Added to Cart!",
+      addToCart: "Add to Cart",
+      success: "Successfully added to your collection."
+    },
+    te: {
+      bestFromNature: "ప్రకృతి నుండి ఉత్తమమైనవి",
+      title1: "మా వస్తువులు",
+      title2: "నిజమైన మరియు శుభ్రమైనవి.",
+      desc: "మీకు 100% సహజమైన మరియు ఆరోగ్యకరమైన ప్లేట్లు, గిన్నెలు మరియు ఆహారాన్ని కనుగొనండి.",
+      added: "కార్ట్‌కు జోడించబడింది!",
+      addToCart: "కార్ట్‌కు జోడించు",
+      success: "మీ సేకరణకు విజయవంతంగా జోడించబడింది."
+    }
+  }[lang];
 
   const categories = [
-    { id: 'all', label: 'All Artifacts', icon: '🌿' },
-    { id: 'wishlist', label: 'Saved Items', icon: '❤️' },
-    { id: 'plates', label: 'Premium Plates', icon: '🍽️' },
-    { id: 'bowls', label: 'Artisan Bowls', icon: '🥣' },
-    { id: 'cutlery', label: 'Birch Cutlery', icon: '🍴' },
-    { id: 'sets', label: 'Gifting Sets', icon: '🎁' },
+    { id: 'all', label: lang === 'en' ? 'All Items' : 'అన్ని వస్తువులు', icon: '🌿' },
+    { id: 'plates', label: lang === 'en' ? 'Plates' : 'ప్లేట్లు', icon: '🍽️' },
+    { id: 'bowls', label: lang === 'en' ? 'Bowls' : 'గిన్నెలు', icon: '🥣' },
+    { id: 'organic', label: lang === 'en' ? 'Healthy Food' : 'సేంద్రీయ ఆహారం', icon: '🍯' },
+    { id: 'earthenware', label: lang === 'en' ? 'Clay Cups' : 'మట్టి పాత్రలు', icon: '🍶' },
   ];
 
   useEffect(() => {
@@ -49,97 +75,81 @@ const ProductList: React.FC<ProductListProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => ({ ...prev, [id]: true }));
-  };
-
   const handleAddToCart = (product: Product) => {
     setAddingToCartId(product.id);
     onAddToCart(product);
+    setShowToast(lang === 'te' ? product.name_te : product.name);
+    
     setTimeout(() => {
       setAddingToCartId(null);
-    }, 2000);
-  };
+    }, 1500);
 
-  const toggleDescription = (id: string) => {
-    setExpandedDescriptions(prev => ({ ...prev, [id]: !prev[id] }));
+    setTimeout(() => {
+      setShowToast(null);
+    }, 3000);
   };
 
   const filteredProducts = products.filter(p => {
-    let categoryMatch = activeCategory === 'all' || p.category === activeCategory;
-    if (activeCategory === 'wishlist') categoryMatch = wishlist.includes(p.id);
-    return categoryMatch;
+    return activeCategory === 'all' || p.category === activeCategory;
   });
+
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const activeCategoryData = categories.find(c => c.id === activeCategory) || categories[0];
 
   return (
-    <section id="shop" className="py-32 relative">
+    <section id="shop" ref={listTopRef} className="py-32 relative">
+      {/* Floating Success Notification */}
+      {showToast && (
+        <div className="fixed top-28 right-8 z-[100] animate-in slide-in-from-right-10 fade-in duration-500">
+          <div className="bg-[#2D5A27] text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-md">
+            <div className="w-8 h-8 bg-[#A4C639] rounded-full flex items-center justify-center text-white font-bold">✓</div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#A4C639]">{t.added}</p>
+              <p className="text-sm font-bold opacity-90">{showToast}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row justify-between items-start mb-24 gap-12">
           <div className="max-w-xl">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#A4C639] mb-4 block">Nature's Best</span>
-            <h2 className="text-5xl md:text-6xl font-bold text-[#4A3728] mb-6 serif leading-tight">Artisanal Choice <br /><span className="italic font-normal">Eco Tableware.</span></h2>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#A4C639] mb-4 block">{t.bestFromNature}</span>
+            <h2 className="text-5xl md:text-6xl font-bold text-[#4A3728] mb-6 serif leading-tight">{t.title1} <br /><span className="italic font-normal">{t.title2}</span></h2>
             <p className="text-[#5D7C52] font-medium text-lg leading-relaxed">
-              Every piece supports a circular economy. Clearly crafted for sustainability.
+              {t.desc}
             </p>
           </div>
           
           <div className="w-full lg:w-auto self-end">
             <div className="relative" ref={dropdownRef}>
-              <div className="mb-3 ml-6">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#A4C639]">Filter by Category</span>
-              </div>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`group w-full lg:w-[340px] flex items-center justify-between p-2 pr-8 rounded-[2rem] bg-white border-2 transition-all shadow-xl hover:shadow-[#A4C639]/10 ${isDropdownOpen ? 'border-[#5D7C52] ring-4 ring-[#5D7C52]/5' : 'border-[#5D7C52]/10'}`}
+                className={`w-full lg:w-[300px] flex items-center justify-between p-5 rounded-full bg-white border border-[#2D5A27]/10 shadow-sm hover:shadow-md transition-all`}
               >
-                <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center text-2xl shadow-inner transition-colors ${isDropdownOpen ? 'bg-[#5D7C52] text-white' : 'bg-[#FAF9F6] text-[#5D7C52]'}`}>
-                    {activeCategoryData.icon}
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-[#4A3728] block leading-none mb-1">
-                      {activeCategoryData.label}
-                    </span>
-                    <span className="text-[9px] font-bold text-[#A4C639] uppercase tracking-widest opacity-80">
-                      Explore artifacts
-                    </span>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xl">{activeCategoryData.icon}</span>
+                  <span className="font-bold text-[10px] uppercase tracking-widest text-[#2D5A27]">{activeCategoryData.label}</span>
                 </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-transform duration-500 ${isDropdownOpen ? 'rotate-180 border-[#5D7C52] bg-[#5D7C52] text-white' : 'border-[#5D7C52]/10 group-hover:border-[#5D7C52]/30'}`}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                <span className="text-[10px] text-[#2D5A27]/40">▼</span>
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-4 w-full bg-white rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(74,55,40,0.2)] border border-[#5D7C52]/10 p-4 z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="grid grid-cols-1 gap-2">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => {
-                          setActiveCategory(cat.id);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all group/item ${
-                          activeCategory === cat.id 
-                            ? 'bg-[#5D7C52] text-white' 
-                            : 'text-[#5D7C52] hover:bg-[#FAF9F6]'
-                        }`}
-                      >
-                        <span className="flex items-center gap-5">
-                          <span className={`text-xl transition-transform group-hover/item:scale-125 ${activeCategory === cat.id ? 'scale-110' : ''}`}>{cat.icon}</span>
-                          <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
-                        </span>
-                        {activeCategory === cat.id && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]"></div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                <div className="absolute top-full left-0 mt-3 w-full bg-white rounded-[2.5rem] shadow-2xl border border-[#2D5A27]/5 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  {categories.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => { setActiveCategory(cat.id); setIsDropdownOpen(false); setCurrentPage(1); }}
+                      className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${activeCategory === cat.id ? 'bg-[#FAF9F6] text-[#2D5A27]' : 'text-[#2D5A27]/60 hover:bg-[#FAF9F6] hover:text-[#2D5A27]'}`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className="font-bold text-[10px] uppercase tracking-widest">{cat.label}</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -147,137 +157,47 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-[3rem] p-8 h-[550px] border border-[#5D7C52]/5 flex flex-col">
-                <Skeleton className="w-full h-64 mb-8 organic-shape" />
-                <div className="space-y-4 flex-1">
-                  <div className="flex justify-between items-start">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-6 w-1/4 ml-4" />
-                  </div>
-                  <Skeleton className="h-4 w-1/4" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-                <Skeleton className="h-16 w-full mt-auto" />
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-96 rounded-[3rem]" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-            {filteredProducts.map(product => {
-              const isWishlisted = wishlist.includes(product.id);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {paginatedProducts.map(product => {
               const isRecentlyAdded = addingToCartId === product.id;
-              const isImageLoaded = loadedImages[product.id];
-              const isExpanded = expandedDescriptions[product.id];
-              const hasLongDescription = product.description && product.description.length > 100;
-              
+              const productName = lang === 'te' ? (product.name_te || product.name) : product.name;
+              const productDesc = lang === 'te' ? (product.description_te || product.description) : product.description;
+
               return (
-                <div key={product.id} className="group flex flex-col h-full bg-white rounded-[3rem] p-8 shadow-sm hover:shadow-2xl transition-all duration-500 border border-[#5D7C52]/5 animate-in fade-in zoom-in duration-500">
-                  <div className="relative h-64 mb-8 overflow-hidden organic-shape shadow-lg bg-[#FAF9F6] border-4 border-white">
-                    {!isImageLoaded && <Skeleton className="absolute inset-0 z-10" />}
-                    
+                <div key={product.id} className="bg-white rounded-[3rem] p-6 shadow-sm border border-[#2D5A27]/5 hover:shadow-2xl transition-all duration-500 flex flex-col group">
+                  <div className="relative h-72 mb-8 overflow-hidden rounded-[2.5rem] bg-[#FAF9F6]">
                     <img 
                       src={product.image} 
-                      alt={product.name} 
-                      onLoad={() => handleImageLoad(product.id)}
-                      className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${isImageLoaded ? 'opacity-100' : 'opacity-0 scale-95'}`}
+                      alt={productName} 
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
                     />
-                    
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onToggleWishlist?.(product.id); }}
-                      className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all z-20 ${isWishlisted ? 'bg-red-500 text-white shadow-lg' : 'bg-white/90 text-[#5D7C52] hover:bg-white'}`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={isWishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </button>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500"></div>
                   </div>
-                  
-                  <div className="flex-1 px-2 mb-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="max-w-[70%]">
-                        <h3 className="text-xl font-bold serif text-[#4A3728] leading-tight mb-1">{product.name}</h3>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-[#A4C639]">{product.category}</span>
-                      </div>
-                      <span className="text-2xl font-bold text-[#5D7C52] serif">₹{product.price}</span>
-                    </div>
-
-                    <div className={`transition-all duration-500 ${isExpanded ? 'mb-4' : 'h-[4.5rem] mb-4'} relative overflow-hidden`}>
-                      {(!product.description || product.description === "") ? (
-                        <div className="space-y-3 py-2">
-                          <Skeleton className="h-3 w-full" />
-                          <Skeleton className="h-3 w-[90%]" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      ) : (
-                        <div>
-                          <p className={`text-[#5D7C52]/70 text-sm leading-relaxed italic transition-all duration-500 ${isExpanded ? 'opacity-100' : 'line-clamp-3'}`}>
-                            {product.description}
-                          </p>
-                          {hasLongDescription && (
-                            <button 
-                              onClick={() => toggleDescription(product.id)}
-                              className="mt-3 text-[10px] font-black uppercase tracking-widest text-[#A4C639] hover:text-[#5D7C52] transition-colors flex items-center gap-1 group"
-                            >
-                              {isExpanded ? 'Read Less' : 'Read More'}
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {product.benefits && product.benefits.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#5D7C52]/5">
-                        {product.benefits.map((benefit, bIdx) => (
-                          <div 
-                            key={bIdx}
-                            className="group/benefit relative flex items-center gap-1.5 px-3 py-1.5 bg-[#A4C639]/10 rounded-full border border-transparent hover:border-[#A4C639]/30 transition-all cursor-default"
-                          >
-                            <svg className="w-3 h-3 text-[#5D7C52]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="text-[8px] font-black uppercase tracking-widest text-[#5D7C52]">
-                              {benefit}
-                            </span>
-                            
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#4A3728] text-white text-[8px] rounded opacity-0 group-hover/benefit:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                              Verified Heritage Standard
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="flex-1 px-2">
+                    <h3 className="text-lg font-bold serif text-[#4A3728] mb-2 leading-tight">{productName}</h3>
+                    <p className="text-[11px] font-medium text-[#5D7C52]/60 line-clamp-2 leading-relaxed">{productDesc}</p>
                   </div>
-
-                  <div className="mt-auto pt-6 border-t border-[#5D7C52]/5">
+                  <div className="mt-8 pt-6 border-t border-[#2D5A27]/5">
                     <button 
                       onClick={() => handleAddToCart(product)}
                       disabled={isRecentlyAdded}
-                      className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-xl transition-all duration-300 flex items-center justify-center gap-3 transform active:scale-95 ${
+                      className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all text-[9px] flex items-center justify-center gap-2 ${
                         isRecentlyAdded 
-                          ? 'bg-[#5D7C52] text-white cursor-default' 
-                          : 'bg-[#A4C639] hover:bg-[#5D7C52] text-white hover:shadow-[#A4C639]/40'
+                        ? 'bg-[#2D5A27] text-white scale-[0.98]' 
+                        : 'bg-[#A4C639] text-white hover:bg-[#2D5A27] hover:-translate-y-1'
                       }`}
                     >
                       {isRecentlyAdded ? (
-                        <div className="flex items-center gap-2">
-                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </div>
-                      ) : (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                          Add to Cart
+                          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">✓</span>
+                          {t.added}
                         </>
+                      ) : (
+                        t.addToCart
                       )}
                     </button>
                   </div>

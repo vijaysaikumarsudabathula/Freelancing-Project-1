@@ -1,13 +1,16 @@
 
 export type UserRole = 'customer' | 'admin' | null;
+export type Language = 'en' | 'te';
 
 export interface Product {
   id: string;
   name: string;
+  name_te: string;
   price: number;
   description: string;
+  description_te: string;
   image: string;
-  category: 'plates' | 'bowls' | 'cutlery' | 'sets';
+  category: 'plates' | 'bowls' | 'cutlery' | 'sets' | 'organic' | 'earthenware';
   benefits: string[];
 }
 
@@ -25,6 +28,8 @@ export interface Order {
   date: string;
   customerEmail: string;
   shippingAddress: string;
+  paymentMethod: 'card' | 'upi';
+  paymentId: string;
 }
 
 export interface OrderDetails {
@@ -39,9 +44,12 @@ export interface OrderDetails {
 }
 
 export interface User {
+  id: string;
   name: string;
   email: string;
+  password?: string; // Added for customer auth
   role: UserRole;
+  joinedDate: string;
 }
 
-export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders' | 'bulk-enquiry';
+export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders' | 'bulk-enquiry' | 'blog-detail' | 'customer-dashboard';

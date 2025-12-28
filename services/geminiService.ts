@@ -9,13 +9,13 @@ export async function getEcoAdvice(query: string) {
       model: 'gemini-3-flash-preview',
       contents: query,
       config: {
-        systemInstruction: "You are an eco-friendly dining expert for LeafyLife. You provide advice on sustainable living, composting leaf plates, and choosing the right biodegradable tableware for events. Keep responses concise and encouraging.",
+        systemInstruction: "You are an eco-friendly dining expert for Deepthi Enterprises. You provide advice on sustainable living, caring for the environment, and choosing plastic-free biodegradable tableware. Keep responses concise and encouraging.",
       },
     });
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "I'm having trouble connecting to my eco-knowledge base right now. Leaf plates are always a great choice though!";
+    return "I'm having trouble connecting to my eco-knowledge base right now. Choosing eco-friendly products is always a great step for the environment though!";
   }
 }
 

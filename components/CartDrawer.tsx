@@ -20,7 +20,6 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   onCheckout
 }) => {
   const [removalNotification, setRemovalNotification] = useState<string | null>(null);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   useEffect(() => {
     if (removalNotification) {
@@ -32,7 +31,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   }, [removalNotification]);
 
   const handleRemove = (item: CartItem) => {
-    setRemovalNotification(`${item.name} removed from basket.`);
+    setRemovalNotification(`${item.name} removed from cart.`);
     onRemove(item.id);
   };
 
@@ -43,7 +42,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         <div className="p-6 border-b flex justify-between items-center bg-[#F9F8F3]">
-          <h2 className="text-2xl font-bold serif text-[#2D5A27]">Your Earth-Friendly Basket</h2>
+          <h2 className="text-2xl font-bold serif text-[#2D5A27]">Your Shopping Cart</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -72,7 +71,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="w-24 h-24 bg-[#F9F8F3] organic-shape flex items-center justify-center mx-auto mb-6 text-4xl opacity-50 grayscale">
                 🌿
               </div>
-              <p className="text-gray-400 font-medium italic">Your basket is empty. <br />Add some nature to your home!</p>
+              <p className="text-gray-400 font-medium italic">Your cart is empty. <br />Add some nature to your list!</p>
             </div>
           ) : (
             items.map(item => (
@@ -80,7 +79,6 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg shadow-sm" />
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 leading-tight">{item.name}</h3>
-                  <p className="text-[#2D5A27] font-semibold mt-1">₹{item.price}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <button 
                       onClick={() => onUpdateQuantity(item.id, -1)}
@@ -113,10 +111,6 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 
         {items.length > 0 && (
           <div className="p-6 border-t bg-[#F9F8F3] shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-gray-600 text-sm font-bold uppercase tracking-widest opacity-60">Total Amount</span>
-              <span className="text-3xl font-bold text-[#2D5A27] serif">₹{total}</span>
-            </div>
             <button 
               onClick={onCheckout}
               className="w-full bg-[#2D5A27] hover:bg-[#1a3817] text-white py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-xl hover:shadow-[#2D5A27]/30 flex items-center justify-center gap-3 active:scale-[0.98]"
@@ -124,11 +118,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              Secure Checkout
+              Go to Checkout
             </button>
-            <p className="text-[8px] text-center text-[#2D5A27]/40 font-bold uppercase tracking-[0.2em] mt-4">
-              Sustainability guaranteed with every order
-            </p>
           </div>
         )}
       </div>

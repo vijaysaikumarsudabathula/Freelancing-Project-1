@@ -3,15 +3,14 @@ import React from 'react';
 
 const Impact: React.FC = () => {
   const stats = [
-    { label: 'Plastic Replaced', value: '2.5M+', unit: 'pieces', icon: '🍃' },
-    { label: 'Water Saved', value: '150K', unit: 'liters', icon: '💧' },
-    { label: 'Artisans Supported', value: '500+', unit: 'families', icon: '🤝' },
-    { label: 'Waste Reduced', value: '45', unit: 'tons', icon: '🌍' },
+    { label: 'Plastic Stopped', value: '2.5M+', unit: 'items', icon: '🍃' },
+    { label: 'Water Saved', value: '150K', unit: 'buckets', icon: '💧' },
+    { label: 'Workers Helped', value: '500+', unit: 'families', icon: '🤝' },
+    { label: 'Waste Stopped', value: '45', unit: 'tons', icon: '🌍' },
   ];
 
   return (
     <section id="impact" className="relative py-32 bg-[#2D5A27] text-white overflow-hidden">
-      {/* Background Image Overlay */}
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=1200" 
@@ -23,10 +22,10 @@ const Impact: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-24">
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Measurable Change</span>
-          <h2 className="text-6xl font-bold mb-8 serif">Our Collective Impact</h2>
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Our results</span>
+          <h2 className="text-6xl font-bold mb-8 serif">How we help the earth</h2>
           <p className="text-white/70 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-            Every harvest you support contributes to a global movement of restoring our planet's health. We measure our success in the plastic we prevent.
+            Every time you buy from us, you help keep the earth clean. We show you how much plastic we stop together.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -45,12 +44,7 @@ const Impact: React.FC = () => {
 
         <div className="mt-24 text-center">
            <div className="inline-flex items-center gap-4 px-10 py-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem]">
-              <div className="flex -space-x-3">
-                 {[1,2,3,4].map(i => (
-                   <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-10 h-10 rounded-full border-2 border-[#2D5A27] grayscale hover:grayscale-0 transition-all cursor-pointer" alt="Contributor" />
-                 ))}
-              </div>
-              <p className="text-sm font-bold text-white/80">Join <span className="text-[#A4C639]">15,000+</span> Eco-Pioneers making a difference.</p>
+              <p className="text-sm font-bold text-white/80">Join <span className="text-[#A4C639]">15,000+</span> people helping nature.</p>
            </div>
         </div>
       </div>
