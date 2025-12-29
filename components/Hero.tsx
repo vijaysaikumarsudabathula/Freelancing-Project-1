@@ -4,6 +4,8 @@ import { Language } from '../types';
 
 interface HeroProps {
   onExplore?: () => void;
+  // Added onStory to fix the TypeScript error in App.tsx
+  onStory?: () => void;
   lang?: Language;
 }
 
@@ -19,7 +21,7 @@ const LEAF_PATHS = [
   "M50,0 C70,20 100,50 100,70 C100,90 80,100 50,100 C20,100 0,90 0,70 C0,50 30,20 50,0 Z" // Teardrop leaf
 ];
 
-const Hero: React.FC<HeroProps> = ({ onExplore, lang = 'en' }) => {
+const Hero: React.FC<HeroProps> = ({ onExplore, onStory, lang = 'en' }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,6 +165,8 @@ const Hero: React.FC<HeroProps> = ({ onExplore, lang = 'en' }) => {
               </svg>
             </button>
             <button 
+              // Fixed: Added onClick to use the onStory prop
+              onClick={() => onStory && onStory()}
               className="px-10 py-5 border-2 border-[#2D5A27]/10 rounded-2xl text-sm font-bold uppercase tracking-widest text-[#2D5A27] hover:bg-[#2D5A27]/5 transition-all bg-white/40 backdrop-blur-md"
             >
               {t.btn2}

@@ -18,7 +18,14 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered';
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'out-for-delivery' | 'delivered' | 'cancelled';
+
+export interface TrackingEvent {
+  status: OrderStatus;
+  timestamp: string;
+  location?: string;
+  note?: string;
+}
 
 export interface Order {
   id: string;
@@ -30,6 +37,8 @@ export interface Order {
   shippingAddress: string;
   paymentMethod: 'card' | 'upi';
   paymentId: string;
+  trackingId?: string;
+  trackingHistory: TrackingEvent[];
 }
 
 export interface OrderDetails {
@@ -43,13 +52,41 @@ export interface OrderDetails {
   cvv: string;
 }
 
+export interface BulkRequest {
+  id: string;
+  customerEmail: string;
+  items: string;
+  quantity: string;
+  status: 'pending' | 'quoted' | 'confirmed';
+  date: string;
+}
+
+export interface SavedCard {
+  id: string;
+  last4: string;
+  brand: string;
+  expiry: string;
+}
+
+export interface SavedAddress {
+  id: string;
+  name: string;
+  phone: string;
+  area: string;
+  landmark: string;
+  city: string;
+  zip: string;
+  type: 'home' | 'work';
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; // Added for customer auth
+  password?: string;
   role: UserRole;
   joinedDate: string;
+  lastLogin?: string;
 }
 
-export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders' | 'bulk-enquiry' | 'blog-detail' | 'customer-dashboard';
+export type View = 'home' | 'shop' | 'about' | 'impact' | 'contact' | 'admin' | 'my-orders' | 'bulk-enquiry' | 'blog-detail' | 'customer-dashboard' | 'saved-orders';

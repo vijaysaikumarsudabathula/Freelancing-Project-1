@@ -18,7 +18,7 @@ const Contact: React.FC = () => {
           </svg>
         </div>
         <h2 className="text-4xl font-bold serif mb-4">Message Received!</h2>
-        <p className="text-gray-600 mb-8">Thank you, K. Latha and our team will get back to you shortly.</p>
+        <p className="text-gray-600 mb-8">Thank you, K. Latha and the Deepthi team will get back to you shortly.</p>
         <button onClick={() => setSubmitted(false)} className="text-[#2D5A27] font-bold border-b-2 border-[#2D5A27]">Send another message</button>
       </div>
     );
@@ -29,7 +29,7 @@ const Contact: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Get In Touch</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Our Location</span>
             <h1 className="text-5xl font-bold mb-8 serif text-[#4A3728]">Deepthi Enterprises</h1>
             <p className="text-lg text-[#2D5A27] mb-12 font-medium">
               Plot No. 145, Thirumalanagar Colony, Near Dhatunagar, Balapur Mandal, Hyderabad - 500059.
@@ -44,8 +44,8 @@ const Contact: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-[#4A3728]">Location</h4>
-                  <p className="text-[#2D5A27]/70">Balapur Mandal, Hyderabad - 500059</p>
+                  <h4 className="font-bold text-lg text-[#4A3728]">Proprietor</h4>
+                  <p className="text-[#2D5A27]/70 font-bold serif">K. Latha</p>
                 </div>
               </div>
               
@@ -56,46 +56,47 @@ const Contact: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-[#4A3728]">Phone Numbers</h4>
-                  <p className="text-[#2D5A27]/70">+91 8367382095 <br /> +91 9010613584</p>
+                  <h4 className="font-bold text-lg text-[#4A3728]">Contact Numbers</h4>
+                  <p className="text-[#2D5A27]/70 font-bold tracking-wider">+91 8367382095 <br /> +91 9010613584</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728]">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-[#4A3728]">Email Support</h4>
-                  <p className="text-[#2D5A27]/70">lathadairy@gmail.com <br /> Vrao_k@zohomail.com</p>
+                  <h4 className="font-bold text-lg text-[#4A3728]">Official Emails</h4>
+                  <p className="text-[#2D5A27]/70 font-medium">lathadairy@gmail.com <br /> vrao_k@zohomail.com</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-[#FAF9F6] p-10 rounded-[2rem] space-y-6 border border-[#4A3728]/5">
+          <form onSubmit={handleSubmit} className="bg-[#FAF9F6] p-10 rounded-[2rem] space-y-6 border border-[#4A3728]/5 shadow-sm">
+            <h3 className="text-2xl font-bold serif text-[#4A3728] mb-6">Send an Inquiry</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">First Name</label>
-                <input required className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white" placeholder="Jane" />
+                <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Name</label>
+                <input required className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm" placeholder="Your Name" />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Last Name</label>
-                <input required className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white" placeholder="Doe" />
+                <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Phone</label>
+                <input required className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm" placeholder="Contact No" />
               </div>
             </div>
             <div>
               <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Email</label>
-              <input required type="email" className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white" placeholder="jane@example.com" />
+              <input required type="email" className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm" placeholder="example@email.com" />
             </div>
             <div>
-              <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Message</label>
-              <textarea required rows={4} className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white" placeholder="Enquire about our products..."></textarea>
+              <label className="block text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Your Message</label>
+              <textarea required rows={4} className="w-full p-4 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm" placeholder="Specify items and quantity needed..."></textarea>
             </div>
-            <button type="submit" className="w-full btn-leaf py-5 rounded-2xl font-black uppercase tracking-[0.3em] shadow-xl">
-              Send Message
+            <button type="submit" className="w-full btn-leaf py-5 rounded-2xl font-black uppercase tracking-[0.3em] shadow-xl text-xs active:scale-95">
+              Submit Request
             </button>
           </form>
         </div>

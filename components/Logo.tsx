@@ -1,13 +1,16 @@
 
 import React from 'react';
+import { Language } from '../types';
 
 interface LogoProps {
   className?: string;
   showText?: boolean;
   light?: boolean;
+  // Added lang to fix TypeScript error in App.tsx
+  lang?: Language;
 }
 
-const Logo: React.FC<LogoProps> = ({ className = "w-12 h-12", showText = true, light = false }) => {
+const Logo: React.FC<LogoProps> = ({ className = "w-12 h-12", showText = true, light = false, lang }) => {
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <svg viewBox="0 0 100 100" className="w-full h-auto drop-shadow-sm">
