@@ -199,8 +199,9 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             {/* Quick Actions / Categories */}
             <div className="bg-white p-12 rounded-[4rem] shadow-sm border border-gray-100">
                <h3 className="text-2xl font-bold serif mb-10 text-[#4A3728]">{t.trending}</h3>
-               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
-                  {products.slice(0, 4).map(p => (
+               {/* Updated to grid-cols-3 and slice(0, 3) to show only top 3 as requested */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {products.slice(0, 3).map(p => (
                     <div key={p.id} onClick={() => setActiveTab('store')} className="group cursor-pointer">
                        <div className="aspect-square bg-[#FAF9F6] rounded-[3rem] overflow-hidden mb-6 border border-gray-50 shadow-sm relative">
                           <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />

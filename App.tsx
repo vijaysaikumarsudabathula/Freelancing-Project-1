@@ -240,19 +240,24 @@ const App: React.FC = () => {
         </div>
       );
       case 'bulk-enquiry': return <div className="pt-24"><BulkEnquiry /></div>;
-      case 'saved-orders': return (
-        <div className="pt-24">
-          <SavedOrders 
-            orders={userOrders} 
-            wishlistProducts={wishlistProducts}
-            onAddToCart={addToCart}
-            onRemoveFromWishlist={toggleWishlist}
-            lang={currentLang} 
-            isLoggedIn={!!user} 
-            onLogin={() => setShowLogin(true)} 
-          />
-        </div>
-      );
+      case 'saved-orders': 
+        if (!user || user.role !== 'customer') {
+          setCurrentView('home');
+          return null;
+        }
+        return (
+          <div className="pt-24">
+            <SavedOrders 
+              orders={userOrders} 
+              wishlistProducts={wishlistProducts}
+              onAddToCart={addToCart}
+              onRemoveFromWishlist={toggleWishlist}
+              lang={currentLang} 
+              isLoggedIn={!!user} 
+              onLogin={() => setShowLogin(true)} 
+            />
+          </div>
+        );
       case 'about': return <div className="pt-24"><About lang={currentLang} /></div>;
       case 'blog-detail': return <div className="pt-0"><BlogDetail blogId="areca-plates" onBack={() => setCurrentView('shop')} lang={currentLang} /></div>;
       default: return (
@@ -267,7 +272,8 @@ const App: React.FC = () => {
              <div className="max-w-7xl mx-auto px-4 text-center mb-16">
                <h2 className="text-4xl font-bold serif text-[#4A3728]">Featured Items</h2>
              </div>
-             <ProductList products={products.slice(0, 4)} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
+             {/* Only showing top 3 products on the home page as requested */}
+             <ProductList products={products.slice(0, 3)} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
              <div className="text-center mt-12">
                <button onClick={() => setCurrentView('shop')} className="px-10 py-5 bg-[#FAF9F6] border border-[#2D5A27]/10 text-[#2D5A27] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2D5A27] hover:text-white transition-all shadow-sm">View Entire Shop</button>
              </div>
@@ -290,9 +296,9 @@ const App: React.FC = () => {
             {[
               { id: 'home', label: t.navHome },
               { id: 'shop', label: t.navShop },
-              { id: 'saved-orders', label: t.navSaved },
+              { id: 'saved-orders', label: t.navSaved, private: true },
               { id: 'bulk-enquiry', label: t.navBulk }
-            ].map(link => (
+            ].filter(link => !link.private || (user && user.role === 'customer')).map(link => (
               <button 
                 key={link.id}
                 onClick={() => setCurrentView(link.id as any)}
