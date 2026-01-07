@@ -73,7 +73,6 @@ function seedInitialData() {
       ['u-admin-1', 'K. Latha', 'lathadairy@gmail.com', 'deepthi@1234', 'admin', new Date().toISOString()]);
 
     const initialProducts: Product[] = [
-      // Buffet Leaf Plates
       {
         id: 'p1',
         name: 'Buffet Leaf Plate 12"',
@@ -82,7 +81,8 @@ function seedInitialData() {
         category: 'plates',
         description: 'Sustainable 12-inch buffet plate made from premium leaf. Perfect for lunch and dinner.',
         description_te: '12 అంగుళాల బఫే లీఫ్ ప్లేట్. భోజనానికి మరియు విందులకు అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1616612693441-17f160683050?auto=format&fit=crop&q=80&w=400',
+        // Changed to local folder path
+        image: './product-images/p1.jpg',
         benefits: ['100% Biodegradable', 'Plastic Free', 'Natural Aroma']
       },
       {
@@ -93,21 +93,9 @@ function seedInitialData() {
         category: 'plates',
         description: 'Extra-large 14-inch buffet plate for heavy festival meals. Hand-pressed organic leaf.',
         description_te: '14 అంగుళాల పెద్ద బఫే లీఫ్ ప్లేట్. పండుగ భోజనాలకు అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1616612693441-17f160683050?auto=format&fit=crop&q=80&w=400',
+        image: './product-images/p2.jpg',
         benefits: ['Heavy Duty', 'Heat Resistant', 'Compostable']
       },
-      {
-        id: 'p3',
-        name: 'Buffet Leaf Plate 10"',
-        name_te: 'బఫే లీఫ్ ప్లేట్ 10"',
-        price: 12,
-        category: 'plates',
-        description: 'Standard 10-inch plate suitable for breakfast and snacks.',
-        description_te: '10 అంగుళాల బఫే లీఫ్ ప్లేట్. అల్పాహారం మరియు స్నాక్స్‌కు అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1616612693441-17f160683050?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Elegant Texture', 'Toxin Free', 'Lightweight']
-      },
-      // Prasadam Doppalu
       {
         id: 'p4',
         name: 'Prasadam Round Doppalu (Big)',
@@ -116,112 +104,19 @@ function seedInitialData() {
         category: 'bowls',
         description: 'Large traditional round leaf bowls for temple offerings and full meals.',
         description_te: 'పెద్ద సైజు ప్రసాదం డొప్పలు. గుడి ప్రసాదం మరియు భోజనానికి అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1591871937573-748af09698d7?auto=format&fit=crop&q=80&w=400',
+        image: './product-images/p4.jpg',
         benefits: ['Sturdy Design', 'Traditional', 'Zero Leakage']
       },
-      {
-        id: 'p5',
-        name: 'Prasadam Round Doppalu (Medium)',
-        name_te: 'ప్రసాదం రౌండ్ డొప్పలు (మధ్యస్థం)',
-        price: 8,
-        category: 'bowls',
-        description: 'Medium traditional leaf bowls for daily rituals and snacks.',
-        description_te: 'మధ్యస్థ సైజు ప్రసాదం డొప్పలు. నిత్య పూజలకు అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1591871937573-748af09698d7?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Sacred Design', 'Handcrafted', 'Chemical Free']
-      },
-      {
-        id: 'p6',
-        name: 'Prasadam Round Doppalu (Small)',
-        name_te: 'ప్రసాదం రౌండ్ డొప్పలు (చిన్నవి)',
-        price: 6,
-        category: 'bowls',
-        description: 'Small traditional leaf bowls perfect for sacred offerings and light snacks.',
-        description_te: 'చిన్న సైజు ప్రసాదం డొప్పలు. ప్రసాదం పంపిణీకి అనుకూలం.',
-        image: 'https://images.unsplash.com/photo-1591871937573-748af09698d7?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Pure', 'Eco-safe', 'Compact']
-      },
-      // Vistarukulu
-      {
-        id: 'p7',
-        name: 'Traditional Vistarukulu',
-        name_te: 'సంప్రదాయ విస్తరాకులు',
-        price: 35,
-        category: 'plates',
-        description: 'Traditional hand-stitched leaf plates specifically for table meals and traditional feasts.',
-        description_te: 'టేబుల్ భోజనం కోసం సంప్రదాయబద్ధంగా కుట్టిన విస్తరాకులు.',
-        image: 'https://images.unsplash.com/photo-1563298723-dcfebaa392e3?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Authentic', 'Large Surface', 'Heritage Product']
-      },
-      // Organic Forest Honey
       {
         id: 'p8',
         name: 'Organic Forest Honey',
         name_te: 'అడవి తేనె',
         price: 580,
         category: 'organic',
-        description: 'Pure, raw organic honey collected directly from deep forest regions. Rich in enzymes.',
+        description: 'Pure, raw organic honey collected directly from deep forest regions.',
         description_te: 'అడవి నుండి సేకరించిన స్వచ్ఛమైన తేనె. ఎటువంటి కల్తీ లేనిది.',
-        image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=400',
+        image: './product-images/p8.jpg',
         benefits: ['Unprocessed', 'Medicinal', 'Wild Sourced']
-      },
-      // Earthen Products
-      {
-        id: 'p9',
-        name: 'Earthen Tea Glass Set',
-        name_te: 'మట్టి టీ గ్లాసులు',
-        price: 85,
-        category: 'earthenware',
-        description: 'Traditional clay tea glasses that enhance the aroma and flavor of your chai.',
-        description_te: 'మట్టితో చేసిన టీ గ్లాసులు. టీ రుచిని పెంచుతాయి.',
-        image: 'https://images.unsplash.com/photo-1581572881241-30379d3be7c4?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Natural Flavor', 'Earthy Aroma', 'Sustainable']
-      },
-      {
-        id: 'p10',
-        name: 'Earthen Water Glass Set',
-        name_te: 'మట్టి వాటర్ గ్లాసులు',
-        price: 120,
-        category: 'earthenware',
-        description: 'Clay water glasses that keep water naturally cool and add essential minerals.',
-        description_te: 'మట్టి వాటర్ గ్లాసులు. నీటిని సహజంగా చల్లగా ఉంచుతాయి.',
-        image: 'https://images.unsplash.com/photo-1581572881241-30379d3be7c4?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Natural Cooling', 'Alkaline', 'Eco-friendly']
-      },
-      {
-        id: 'p11',
-        name: 'Earthen Water Bottle',
-        name_te: 'మట్టి వాటర్ బాటిల్',
-        price: 260,
-        category: 'earthenware',
-        description: 'Terracotta water bottle that naturally filters and cools your drinking water without electricity.',
-        description_te: 'మట్టి వాటర్ బాటిల్. సహజ శీతలీకరణను అందిస్తుంది.',
-        image: 'https://images.unsplash.com/photo-1581572881241-30379d3be7c4?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Zero Plastic', 'Self-Cooling', 'Ergonomic']
-      },
-      // Organic Pulses & Millets
-      {
-        id: 'p12',
-        name: 'Organic Pulses & Millets',
-        name_te: 'ఆర్గానిక్ పప్పులు మరియు చిరుధాన్యాలు',
-        price: 195,
-        category: 'organic',
-        description: 'Chemical-free nutrient-rich organic pulses and millets for a healthy lifestyle.',
-        description_te: 'ఆరోగ్యకరమైన ఆహారం కోసం ఆర్గానిక్ పప్పులు మరియు చిరుధాన్యాలు.',
-        image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400',
-        benefits: ['High Protein', 'Chemical Free', 'Farmers Sourced']
-      },
-      // Cold Pressed Oils
-      {
-        id: 'p13',
-        name: 'Cold Pressed Pure Oil',
-        name_te: 'గానుగ నూనె',
-        price: 340,
-        category: 'organic',
-        description: 'Pure cold-pressed oil extracted at low temperatures to retain all natural nutrients and antioxidants.',
-        description_te: 'స్వచ్ఛమైన గానుగ నూనె. పోషక విలువలు తగ్గకుండా తయారు చేయబడింది.',
-        image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=400',
-        benefits: ['Heart Healthy', 'No Additives', 'Cold Processed']
       }
     ];
 
@@ -254,8 +149,13 @@ export function getProducts(): Product[] {
 }
 
 export function saveProduct(p: Product) {
+  // Ensure image path is correctly formatted if it's just a filename
+  const finalImagePath = (p.image.startsWith('http') || p.image.startsWith('./') || p.image.startsWith('data:')) 
+    ? p.image 
+    : `./product-images/${p.image}`;
+
   db.run(`INSERT OR REPLACE INTO products (id, name, name_te, price, category, description, description_te, image, benefits) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [p.id, p.name, p.name_te, p.price, p.category, p.description, p.description_te, p.image, JSON.stringify(p.benefits)]
+    [p.id, p.name, p.name_te, p.price, p.category, p.description, p.description_te, finalImagePath, JSON.stringify(p.benefits)]
   );
   saveDatabase();
 }

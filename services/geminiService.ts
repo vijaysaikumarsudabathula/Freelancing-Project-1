@@ -1,7 +1,8 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Use the key you provided directly for local testing
+const ai = new GoogleGenAI({ apiKey: "AIzaSyDwWlpkUWFTadpPTT8bnd-BR4rUeQ8iHvQ" });
 
 export async function getEcoAdvice(query: string) {
   try {

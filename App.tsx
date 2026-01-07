@@ -40,23 +40,23 @@ const App: React.FC = () => {
   const t = {
     en: { 
       navHome: "Home", 
-      navShop: "Shop", 
-      navSaved: "Saved Orders", 
-      navBulk: "Bulk Order",
-      login: "Login", 
-      loading: "Setting up shop...",
+      navShop: "Collections", 
+      navSaved: "My Orders", 
+      navBulk: "Bulk Enquiries",
+      login: "Member Access", 
+      loading: "Harvesting quality items...",
       copyright: "© 2024 Deepthi Enterprises",
-      sessionExpMsg: "Session expired due to inactivity."
+      sessionExpMsg: "Session expired for security."
     },
     te: { 
       navHome: "హోమ్", 
-      navShop: "షాపు", 
-      navSaved: "ఆర్డర్లు", 
+      navShop: "వస్తువులు", 
+      navSaved: "నా ఆర్డర్లు", 
       navBulk: "బల్క్ ఆర్డర్",
       login: "లాగిన్", 
-      loading: "దుకాణం సిద్ధమవుతోంది...",
+      loading: "సిద్ధమవుతోంది...",
       copyright: "© 2024 దీప్తి ఎంటర్‌ప్రైజెస్",
-      sessionExpMsg: "5 నిమిషాల నిష్క్రియాత్మకత కారణంగా మీరు లాగ్ అవుట్ చేయబడ్డారు."
+      sessionExpMsg: "సెషన్ గడువు ముగిసింది."
     }
   }[currentLang];
 
@@ -158,8 +158,11 @@ const App: React.FC = () => {
 
   const placeOrder = (orderDetails: OrderDetails) => {
     const subtotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    const total = subtotal + Math.round(subtotal * 0.05);
-    const orderId = `ord-${Date.now()}`;
+    const tax = Math.round(subtotal * 0.05);
+    const shipping = subtotal > 1500 ? 0 : 150;
+    const total = subtotal + tax + shipping;
+    
+    const orderId = `ORD-${Date.now()}`;
     const newOrder: Order = {
       id: orderId,
       items: [...cartItems],
@@ -170,7 +173,7 @@ const App: React.FC = () => {
       shippingAddress: orderDetails.address,
       paymentMethod: orderDetails.cardNumber ? 'card' : 'upi',
       paymentId: `PAY-${Math.floor(Math.random() * 1000000)}`,
-      trackingHistory: [{ status: 'pending', timestamp: new Date().toISOString(), note: 'Order placed and verified.' }]
+      trackingHistory: [{ status: 'pending', timestamp: new Date().toISOString(), note: 'Order received. Awaiting dispatch.' }]
     };
     DB.addOrder(newOrder);
     setOrders(DB.getOrders());
@@ -189,7 +192,6 @@ const App: React.FC = () => {
     DB.setActiveUserDB(userData);
     setShowLogin(false);
     if (userData.role === 'admin') setCurrentView('admin');
-    else if (currentView === 'saved-orders') setCurrentView('saved-orders');
     else setCurrentView('home');
   };
 
@@ -212,10 +214,10 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (!products.length && !isDBReady) return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#2D5A27] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#2D5A27]">{t.loading}</p>
+          <div className="w-16 h-16 border-4 border-[#108242] border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#108242]">{t.loading}</p>
         </div>
       </div>
     );
@@ -227,24 +229,23 @@ const App: React.FC = () => {
     switch (currentView) {
       case 'shop': return (
         <div className="pt-24 animate-fade-in">
-          <div className="max-w-7xl mx-auto px-4 py-12">
-            <input 
-              type="text" 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-              placeholder={currentLang === 'en' ? "Search for eco items..." : "వస్తువులను వెతకండి..."} 
-              className="w-full max-w-xl p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm outline-none focus:ring-2 focus:ring-[#A4C639]"
-            />
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <h1 className="text-5xl font-bold serif text-[#4A3728] mb-12 text-center">Our Collections</h1>
+            <div className="flex justify-center mb-12">
+               <input 
+                type="text" 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                placeholder={currentLang === 'en' ? "What are you looking for?" : "వస్తువులను వెతకండి..."} 
+                className="w-full max-w-xl p-6 bg-white border border-[#108242]/10 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#A4C639] text-sm font-medium"
+               />
+            </div>
           </div>
           <ProductList products={filteredProducts} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
         </div>
       );
       case 'bulk-enquiry': return <div className="pt-24"><BulkEnquiry /></div>;
       case 'saved-orders': 
-        if (!user || user.role !== 'customer') {
-          setCurrentView('home');
-          return null;
-        }
         return (
           <div className="pt-24">
             <SavedOrders 
@@ -259,7 +260,6 @@ const App: React.FC = () => {
           </div>
         );
       case 'about': return <div className="pt-24"><About lang={currentLang} /></div>;
-      case 'blog-detail': return <div className="pt-0"><BlogDetail blogId="areca-plates" onBack={() => setCurrentView('shop')} lang={currentLang} /></div>;
       default: return (
         <div className="animate-fade-in">
           <Hero 
@@ -268,14 +268,14 @@ const App: React.FC = () => {
             lang={currentLang} 
           />
           <Impact />
-          <div className="py-24">
-             <div className="max-w-7xl mx-auto px-4 text-center mb-16">
-               <h2 className="text-4xl font-bold serif text-[#4A3728]">Featured Items</h2>
+          <div className="py-32">
+             <div className="max-w-7xl mx-auto px-4 text-center mb-20">
+               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Hand-Picked for You</span>
+               <h2 className="text-5xl font-bold serif text-[#4A3728]">Selected Discoveries</h2>
              </div>
-             {/* Only showing top 3 products on the home page as requested */}
-             <ProductList products={products.slice(0, 3)} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
-             <div className="text-center mt-12">
-               <button onClick={() => setCurrentView('shop')} className="px-10 py-5 bg-[#FAF9F6] border border-[#2D5A27]/10 text-[#2D5A27] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2D5A27] hover:text-white transition-all shadow-sm">View Entire Shop</button>
+             <ProductList products={products.slice(0, 4)} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
+             <div className="text-center mt-20">
+               <button onClick={() => setCurrentView('shop')} className="btn-leaf px-12 py-5 text-[10px] font-black uppercase tracking-widest shadow-2xl">View Entire Catalog</button>
              </div>
           </div>
           <About lang={currentLang} />
@@ -286,23 +286,23 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
-      <nav className="fixed top-0 w-full z-[60] bg-white/80 backdrop-blur-xl border-b border-gray-100 h-24 flex items-center">
+      <nav className="fixed top-0 w-full z-[60] bg-white/90 backdrop-blur-xl border-b border-[#108242]/5 h-24 flex items-center">
         <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center">
-          <button onClick={() => setCurrentView('home')} className="flex items-center group">
-            <Logo className="w-10 h-10" showText={true} lang={currentLang} />
+          <button onClick={() => setCurrentView('home')} className="flex items-center group scale-90">
+            <Logo showText={true} lang={currentLang} />
           </button>
           
-          <div className="hidden lg:flex items-center space-x-10">
+          <div className="hidden lg:flex items-center space-x-12">
             {[
               { id: 'home', label: t.navHome },
               { id: 'shop', label: t.navShop },
-              { id: 'saved-orders', label: t.navSaved, private: true },
+              { id: 'saved-orders', label: t.navSaved },
               { id: 'bulk-enquiry', label: t.navBulk }
-            ].filter(link => !link.private || (user && user.role === 'customer')).map(link => (
+            ].map(link => (
               <button 
                 key={link.id}
                 onClick={() => setCurrentView(link.id as any)}
-                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:text-[#A4C639] ${currentView === link.id ? 'text-[#2D5A27] border-b-2 border-[#A4C639] pb-1' : 'text-[#2D5A27]/40'}`}
+                className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-[#108242] ${currentView === link.id ? 'text-[#108242] border-b-2 border-[#A4C639] pb-1' : 'text-[#108242]/30'}`}
               >
                 {link.label}
               </button>
@@ -310,23 +310,23 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-6">
-            <div className="flex bg-[#FAF9F6] border border-gray-100 rounded-xl p-1 shadow-inner group hover:border-[#A4C639]/30 transition-all">
+            <div className="flex bg-[#FAF9F6] border border-gray-100 rounded-2xl p-1 shadow-inner">
               <button 
                 onClick={() => setCurrentLang('en')} 
-                className={`px-4 py-2 rounded-lg text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#2D5A27] text-white shadow-lg' : 'text-gray-400 hover:text-[#2D5A27]'}`}
+                className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
               >
                 EN
               </button>
               <button 
                 onClick={() => setCurrentLang('te')} 
-                className={`px-4 py-2 rounded-lg text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#2D5A27] text-white shadow-lg' : 'text-gray-400 hover:text-[#2D5A27]'}`}
+                className={`px-4 py-2 rounded-xl text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
               >
-                తెలుగు
+                TE
               </button>
             </div>
 
-            <button onClick={() => setIsCartOpen(true)} className={`relative p-3 rounded-full hover:bg-gray-100 transition-all ${cartAnimate ? 'scale-110' : ''}`}>
-              <svg className="h-6 w-6 text-[#2D5A27]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onClick={() => setIsCartOpen(true)} className={`relative p-3 rounded-full hover:bg-[#FAF9F6] transition-all ${cartAnimate ? 'scale-110' : ''}`}>
+              <svg className="h-6 w-6 text-[#108242]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {cartItems.length > 0 && (
@@ -337,12 +337,12 @@ const App: React.FC = () => {
             </button>
 
             {user ? (
-              <div className="flex items-center gap-4 border-l border-gray-100 pl-4">
-                <span className="text-[10px] font-bold text-[#2D5A27] hidden sm:block">Hello, {user.name.split(' ')[0]}</span>
-                <button onClick={handleLogout} className="text-red-400 hover:text-red-600 transition-all p-2">✕</button>
+              <div className="flex items-center gap-4 border-l border-gray-100 pl-6">
+                <button onClick={() => setCurrentView('saved-orders')} className="w-10 h-10 bg-[#FAF9F6] rounded-full flex items-center justify-center text-xl hover:scale-105 transition-transform border border-gray-100 shadow-sm">👤</button>
+                <button onClick={handleLogout} className="text-red-400 hover:text-red-600 transition-all text-xl">✕</button>
               </div>
             ) : (
-              <button onClick={() => setShowLogin(true)} className="px-8 py-3.5 bg-[#2D5A27] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-0.5 transition-all">
+              <button onClick={() => setShowLogin(true)} className="px-8 py-4 bg-[#108242] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#108242]/20 hover:-translate-y-0.5 transition-all">
                 {t.login}
               </button>
             )}

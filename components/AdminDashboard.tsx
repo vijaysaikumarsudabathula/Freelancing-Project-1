@@ -28,6 +28,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRefiningAI, setIsRefiningAI] = useState(false);
+  const [useLocalFolder, setUseLocalFolder] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '', name_te: '', price: '0', category: 'plates' as Product['category'],
@@ -57,12 +58,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!formData.imagePrompt.trim()) return;
     setIsGenerating(true);
     const url = await generateProductImage(formData.imagePrompt);
-    if (url) setFormData(prev => ({ ...prev, imageUrl: url }));
+    if (url) {
+      setFormData(prev => ({ ...prev, imageUrl: url }));
+      setUseLocalFolder(false); // Switch to URL mode if AI generates an image
+    }
     setIsGenerating(false);
   };
 
   const handleSubmitProduct = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let finalImage = formData.imageUrl;
+    // If using local folder and just provided a filename, format it
+    if (useLocalFolder && finalImage && !finalImage.startsWith('http') && !finalImage.startsWith('./') && !finalImage.startsWith('data:')) {
+      finalImage = `./product-images/${finalImage}`;
+    }
+
     const productData: Product = {
       id: editingProductId || `p-${Date.now()}`,
       name: formData.name,
@@ -71,9 +82,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       category: formData.category,
       description: formData.description,
       description_te: formData.description_te,
-      image: formData.imageUrl || 'https://via.placeholder.com/300',
-      benefits: ['Biodegradable', 'Handcrafted', 'Eco-safe']
+      image: finalImage || './product-images/placeholder.jpg',
+      benefits: ['100% Biodegradable', 'Handcrafted', 'Eco-safe']
     };
+
     if (editingProductId) onUpdateProduct(productData);
     else onAddProduct(productData);
     closeModals();
@@ -161,7 +173,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
             ))}
-            {orders.length === 0 && <div className="text-center py-20 bg-white rounded-[3rem] border-4 border-dashed border-gray-50 text-gray-300 italic">No orders recorded in the ecosystem yet.</div>}
           </div>
         )}
 
@@ -178,7 +189,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {products.map(p => (
                 <div key={p.id} className="bg-white p-8 rounded-[3.5rem] border border-[#2D5A27]/5 relative group overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500">
                   <div className="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all z-20">
-                    {/* Fixed: Added imageUrl: p.image to satisfy the formData interface */}
                     <button onClick={() => { setEditingProductId(p.id); setFormData({...p, price: p.price.toString(), imagePrompt: '', imageUrl: p.image}); setIsAdding(true); }} className="w-12 h-12 bg-white rounded-xl shadow-xl flex items-center justify-center text-[#2D5A27] hover:scale-110">✎</button>
                     <button onClick={() => onDeleteProduct(p.id)} className="w-12 h-12 bg-white rounded-xl shadow-xl flex items-center justify-center text-red-500 hover:scale-110">✕</button>
                   </div>
@@ -186,8 +196,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                      <img src={p.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={p.name} />
                   </div>
                   <h3 className="text-2xl font-bold serif text-[#4A3728] mb-2">{p.name}</h3>
-                  <p className="text-[12px] font-black text-[#A4C639] uppercase tracking-[0.2em] mb-4">Stock Value: ₹{p.price}</p>
-                  <p className="text-xs text-gray-400 line-clamp-2 italic leading-relaxed">{p.description}</p>
+                  <p className="text-[12px] font-black text-[#A4C639] uppercase tracking-[0.2em] mb-4">Price: ₹{p.price}</p>
                 </div>
               ))}
             </div>
@@ -207,37 +216,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <h2 className="text-5xl font-bold serif text-[#4A3728]">{orders.length} <span className="text-lg font-sans text-gray-300 ml-4 italic">Settled Successfully</span></h2>
                 </div>
             </div>
-            
-            <div className="bg-white rounded-[3.5rem] border border-gray-100 overflow-hidden shadow-sm">
-              <div className="p-8 border-b border-gray-50 flex justify-between items-center">
-                <h3 className="text-xl font-bold serif text-[#4A3728]">Audit Trail</h3>
-                <button className="text-[10px] font-black uppercase tracking-widest text-[#A4C639]">Download Ledger</button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-[#FAF9F6] border-b border-gray-100">
-                    <tr>
-                      {['Reference', 'Customer', 'Channel', 'Date', 'Net Amount'].map(h => (
-                        <th key={h} className="p-8 text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/30">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {orders.map(o => (
-                      <tr key={o.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-8 text-[11px] font-bold text-[#4A3728]">{o.paymentId || 'TXN-0000'}</td>
-                        <td className="p-8 text-[11px] font-medium text-gray-400">{o.customerEmail}</td>
-                        <td className="p-8">
-                          <span className="px-4 py-1.5 bg-gray-100 rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-400">{o.paymentMethod || 'SECURE'}</span>
-                        </td>
-                        <td className="p-8 text-[11px] text-gray-300">{o.date}</td>
-                        <td className="p-8 text-lg font-bold text-[#2D5A27]">₹{o.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
         )}
 
@@ -250,9 +228,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <div className="w-20 h-20 bg-[#FAF9F6] rounded-full flex items-center justify-center text-3xl mb-6 shadow-inner border-2 border-white">👤</div>
                   <h4 className="font-bold text-[#4A3728] text-lg mb-1">{u.name}</h4>
                   <p className="text-[10px] text-gray-300 font-medium mb-6 truncate w-full">{u.email}</p>
-                  <div className="flex gap-2">
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-4 py-1.5 rounded-lg ${u.role === 'admin' ? 'bg-[#2D5A27] text-white' : 'bg-[#A4C639] text-white shadow-lg shadow-[#A4C639]/20'}`}>{u.role}</span>
-                  </div>
+                  <span className={`text-[8px] font-black uppercase tracking-widest px-4 py-1.5 rounded-lg ${u.role === 'admin' ? 'bg-[#2D5A27] text-white' : 'bg-[#A4C639] text-white'}`}>{u.role}</span>
                 </div>
               ))}
             </div>
@@ -279,6 +255,38 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <input value={formData.name_te} onChange={e => setFormData({...formData, name_te: e.target.value})} className="w-full p-6 bg-[#FAF9F6] rounded-[2rem] outline-none font-bold text-sm border border-transparent focus:border-[#A4C639]" />
                   </div>
                 </div>
+                
+                <div className="flex gap-4 p-2 bg-[#FAF9F6] rounded-2xl">
+                   <button 
+                    type="button" 
+                    onClick={() => setUseLocalFolder(true)} 
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${useLocalFolder ? 'bg-[#2D5A27] text-white shadow-lg' : 'text-[#2D5A27]/40'}`}
+                   >
+                     Local Folder (./product-images/)
+                   </button>
+                   <button 
+                    type="button" 
+                    onClick={() => setUseLocalFolder(false)} 
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!useLocalFolder ? 'bg-[#2D5A27] text-white shadow-lg' : 'text-[#2D5A27]/40'}`}
+                   >
+                     Direct Web Link
+                   </button>
+                </div>
+
+                <div>
+                   <label className="block text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-3 ml-2">
+                     {useLocalFolder ? "Image Filename (e.g. leaf-plate.jpg)" : "Full Image URL"}
+                   </label>
+                   <input 
+                    required 
+                    value={formData.imageUrl} 
+                    onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+                    placeholder={useLocalFolder ? "e.g. item1.png" : "https://example.com/image.jpg"}
+                    className="w-full p-6 bg-[#FAF9F6] rounded-[2rem] outline-none font-bold text-sm border border-transparent focus:border-[#A4C639]" 
+                   />
+                   {useLocalFolder && <p className="mt-2 text-[9px] text-[#A4C639] font-bold px-4">Place this image in your 'product-images' folder.</p>}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-3 ml-2">Price Value (₹)</label>
@@ -294,11 +302,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </select>
                   </div>
                 </div>
-                <div>
-                   <label className="block text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-3 ml-2">Item Story (Description)</label>
-                   <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-8 bg-[#FAF9F6] rounded-[3rem] outline-none text-sm h-32 border border-transparent focus:border-[#A4C639]" />
-                </div>
-                
+
                 <div className="bg-[#FAF9F6] p-10 rounded-[4rem] border border-[#2D5A27]/5">
                    <p className="text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-6">Visual Intelligence (Gemini AI)</p>
                    <div className="flex flex-col md:flex-row gap-10 items-center">
@@ -308,9 +312,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                            <button type="button" onClick={handleMagicPrompt} disabled={isRefiningAI} className="flex-1 py-4 bg-white border border-[#2D5A27]/10 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-[#FAF9F6] transition-all">{isRefiningAI ? 'Refining...' : 'Refine Prompt'}</button>
                            <button type="button" onClick={handleGenerateImage} disabled={isGenerating} className="flex-1 py-4 bg-[#2D5A27] text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl">{isGenerating ? 'Synthesizing...' : 'Generate Art'}</button>
                         </div>
-                     </div>
-                     <div className="w-32 h-32 rounded-3xl overflow-hidden bg-white border-8 border-white shadow-2xl shrink-0">
-                        {formData.imageUrl && <img src={formData.imageUrl} className="w-full h-full object-cover animate-in fade-in" />}
                      </div>
                    </div>
                 </div>
