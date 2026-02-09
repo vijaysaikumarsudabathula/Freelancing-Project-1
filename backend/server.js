@@ -403,7 +403,6 @@ app.get('/api/transactions/detailed', async (req, res) => {
         u.email as customerEmail,
         u.name as customerName,
         u.phone as customerPhone,
-        o.id as orderId,
         o.customerEmail as orderEmail
       FROM transaction_log t
       LEFT JOIN users u ON t.userId = u.id
@@ -415,7 +414,7 @@ app.get('/api/transactions/detailed', async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-});
+};
 
 // Update transaction status
 app.put('/api/transactions/:id/status', async (req, res) => {
@@ -478,28 +477,35 @@ app.get('/api/audit/logins', async (req, res) => {
 // Get user activity summary
 app.get('/api/users/:id/activity', async (req, res) => {
   try {
-    const activity = await allQuery(`
+    const userId = req.params.id;
+    const logins = await allQuery(`
       SELECT 
         'login' as type,
-        timestamp as date,
+        timestamp as eventDate,
         status as details
       FROM login_history
       WHERE userId = ?
-      UNION
+      ORDER BY timestamp DESC
+      LIMIT 100
+    `, [userId]);
+    
+    const orders = await allQuery(`
       SELECT 
         'order' as type,
-        date as timestamp_col,
+        date as eventDate,
         status as details
       FROM orders
       WHERE userId = ?
       ORDER BY date DESC
       LIMIT 100
-    `, [req.params.id, req.params.id]);
+    `, [userId]);
+    
+    const activity = [...logins, ...orders].sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()).slice(0, 100);
     res.json(activity);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-});
+}
 
 // ==================== BULK ENQUIRY ====================
 app.post('/api/send-bulk-enquiry', async (req, res) => {
