@@ -109,7 +109,7 @@ const About: React.FC<AboutProps> = ({ onReadMore, lang = 'en' }) => {
           <div className="flex-1 w-full">
             <div className="relative group">
               <div className="organic-shape overflow-hidden shadow-2xl relative z-10 border-8 border-white">
-                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Nature" />
+                <img src="/images/menu.png" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Nature" />
               </div>
             </div>
           </div>

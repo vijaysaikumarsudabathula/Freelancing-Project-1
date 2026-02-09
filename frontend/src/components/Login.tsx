@@ -43,13 +43,21 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCancel }) => {
               joinedDate: new Date().toISOString() 
             };
             // Log admin login
-            await logLogin(adminUser.id, adminUser.email, 'success', 'Admin login successful');
-            await logActivity(adminUser.id, 'LOGIN', `Admin ${adminUser.name} logged in`, { email: adminUser.email });
+            try {
+              await logLogin(adminUser.id, adminUser.email, 'success', 'Admin login successful');
+              await logActivity(adminUser.id, 'LOGIN', `Admin ${adminUser.name} logged in`, { email: adminUser.email });
+            } catch (logErr) {
+              console.error('Error logging admin login:', logErr);
+            }
             onLogin(adminUser);
           } else {
             // Log failed admin login
-            await logLogin(null, inputEmail, 'failed', 'Invalid admin credentials');
-            setError('Invalid Admin Credentials.');
+            try {
+              await logLogin(null, inputEmail, 'failed', 'Invalid admin credentials');
+            } catch (logErr) {
+              console.error('Error logging failed admin login:', logErr);
+            }
+            setError('Invalid admin email or password. Please check your credentials.');
           }
         } else {
           // Customer login
@@ -57,18 +65,30 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCancel }) => {
             const existingUser = await api.getUserByEmail(inputEmail);
             if (existingUser && existingUser.password === inputPass && existingUser.role === 'customer') {
               // Log successful customer login
-              await logLogin(existingUser.id, existingUser.email, 'success', 'Customer login successful');
-              await logActivity(existingUser.id, 'LOGIN', `Customer ${existingUser.name} logged in`, { email: existingUser.email });
+              try {
+                await logLogin(existingUser.id, existingUser.email, 'success', 'Customer login successful');
+                await logActivity(existingUser.id, 'LOGIN', `Customer ${existingUser.name} logged in`, { email: existingUser.email });
+              } catch (logErr) {
+                console.error('Error logging successful login:', logErr);
+              }
               onLogin(existingUser);
             } else {
               // Log failed login attempt
-              await logLogin(null, inputEmail, 'failed', 'Invalid credentials');
-              setError('Invalid email or password. Please try again or create an account.');
+              try {
+                await logLogin(null, inputEmail, 'failed', 'Invalid credentials');
+              } catch (logErr) {
+                console.error('Error logging failed login:', logErr);
+              }
+              setError('Invalid email or password. Please try again.');
             }
           } catch (err) {
             // User not found
-            await logLogin(null, inputEmail, 'failed', 'User not found');
-            setError('Invalid email or password. Please try again or create an account.');
+            try {
+              await logLogin(null, inputEmail, 'failed', 'User not found');
+            } catch (logErr) {
+              console.error('Error logging user not found:', logErr);
+            }
+            setError('Invalid email or password. Please try again.');
           }
         }
       } else {
@@ -104,13 +124,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCancel }) => {
         } as any);
         
         // Log signup activity
-        await logActivity(newUser.id, 'SIGNUP', `New customer account created: ${newUser.name}`, { email: newUser.email, name: newUser.name });
-        await logLogin(newUser.id, newUser.email, 'success', 'Account signup successful');
+        try {
+          await logActivity(newUser.id, 'SIGNUP', `New customer account created: ${newUser.name}`, { email: newUser.email, name: newUser.name });
+          await logLogin(newUser.id, newUser.email, 'success', 'Account signup successful');
+        } catch (logErr) {
+          console.error('Error logging signup:', logErr);
+        }
         onLogin(newUser);
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred. Make sure the server is running.');
+      setError('An error occurred. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

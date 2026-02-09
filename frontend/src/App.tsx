@@ -327,7 +327,8 @@ const App: React.FC = () => {
               onRemoveFromWishlist={toggleWishlist}
               lang={currentLang} 
               isLoggedIn={!!user} 
-              onLogin={() => setShowLogin(true)} 
+              onLogin={() => setShowLogin(true)}
+              onOrdersRefresh={(updatedOrders) => setOrders(updatedOrders)}
             />
           </div>
         );

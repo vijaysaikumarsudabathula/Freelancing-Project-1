@@ -140,7 +140,7 @@ export function initializeDatabase() {
         db.run(`
           CREATE TABLE IF NOT EXISTS login_history (
             id TEXT PRIMARY KEY,
-            userId TEXT NOT NULL,
+            userId TEXT,
             email TEXT,
             status TEXT NOT NULL,
             notes TEXT,

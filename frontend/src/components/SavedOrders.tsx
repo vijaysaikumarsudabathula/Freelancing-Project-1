@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, Language, Product } from '../types';
 import { resolveProductImage } from '../services/imageHelper';
+import * as DB from '../services/database';
 
 interface SavedOrdersProps {
   orders: Order[];
@@ -11,6 +12,7 @@ interface SavedOrdersProps {
   lang?: Language;
   onLogin: () => void;
   isLoggedIn: boolean;
+  onOrdersRefresh?: (orders: Order[]) => void;
 }
 
 const SavedOrders: React.FC<SavedOrdersProps> = ({ 
@@ -20,10 +22,46 @@ const SavedOrders: React.FC<SavedOrdersProps> = ({
   onRemoveFromWishlist,
   lang = 'en', 
   onLogin, 
-  isLoggedIn 
+  isLoggedIn,
+  onOrdersRefresh
 }) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'purchased' | 'wishlist'>('purchased');
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+
+  // Auto-refresh orders every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const updatedOrders = await DB.getOrdersAsync();
+        if (onOrdersRefresh) {
+          onOrdersRefresh(updatedOrders);
+        }
+        setLastRefreshTime(new Date());
+      } catch (err) {
+        console.error('Error refreshing orders:', err);
+      }
+    }, 10000); // Refresh every 10 seconds
+    
+    setRefreshInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [onOrdersRefresh]);
+
+  const handleManualRefresh = async () => {
+    try {
+      const updatedOrders = await DB.getOrdersAsync();
+      if (onOrdersRefresh) {
+        onOrdersRefresh(updatedOrders);
+      }
+      setLastRefreshTime(new Date());
+    } catch (err) {
+      console.error('Error refreshing orders:', err);
+    }
+  };
 
   const t = {
     en: {
@@ -83,9 +121,23 @@ const SavedOrders: React.FC<SavedOrdersProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 py-24 animate-fade-in">
       <div className="mb-16">
-        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Personal space</span>
-        <h2 className="text-5xl font-bold serif text-[#4A3728] mb-4">{t.title}</h2>
-        <p className="text-[#2D5A27]/60 font-medium">{t.subtitle}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Personal space</span>
+            <h2 className="text-5xl font-bold serif text-[#4A3728] mb-4">{t.title}</h2>
+            <p className="text-[#2D5A27]/60 font-medium">{t.subtitle}</p>
+          </div>
+          <button
+            onClick={handleManualRefresh}
+            className="px-6 py-3 bg-[#A4C639] text-white rounded-2xl text-[8px] font-black uppercase tracking-widest hover:shadow-lg transition-all active:scale-95"
+            title="Refresh orders to see latest updates from admin"
+          >
+            🔄 Refresh Now
+          </button>
+        </div>
+        {lastRefreshTime && (
+          <p className="text-[8px] text-gray-400 mt-4">Last updated: {lastRefreshTime.toLocaleTimeString()}</p>
+        )}
       </div>
 
       {/* Tabs */}

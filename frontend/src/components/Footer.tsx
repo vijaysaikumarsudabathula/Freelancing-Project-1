@@ -111,6 +111,7 @@ const Footer: React.FC<FooterProps> = ({ lang = 'en', onNavigate }) => {
                 <div className="flex flex-col gap-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Call</p>
                   <p className="text-sm font-bold text-[#4A3728]">+91 8367382095</p>
+                  <p className="text-sm font-bold text-[#4A3728]">+91 9010613584</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Email</p>
