@@ -505,7 +505,7 @@ app.get('/api/users/:id/activity', async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-}
+});
 
 // ==================== BULK ENQUIRY ====================
 app.post('/api/send-bulk-enquiry', async (req, res) => {
