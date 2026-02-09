@@ -4,6 +4,11 @@ import bodyParser from 'body-parser';
 import { v4 as uuidv4 } from 'uuid';
 import { initializeDatabase, runQuery, getQuery, allQuery } from './db.js';
 import nodemailer from 'nodemailer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -588,6 +593,15 @@ function sendSMSNotification({ phone, name, enquiryId }) {
 // ==================== HEALTH CHECK ====================
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running', timestamp: new Date().toISOString() });
+});
+
+// ==================== SERVE STATIC FRONTEND FILES ====================
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// SPA fallback: Serve index.html for any route not matched by API endpoints
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 // ==================== SERVER STARTUP WITH ERROR HANDLING ====================
