@@ -41,7 +41,14 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Initialize database on startup
-await initializeDatabase();
+try {
+  console.log('📍 Initializing database...');
+  await initializeDatabase();
+  console.log('✅ Database initialized successfully');
+} catch (dbErr) {
+  console.error('❌ Fatal: Database initialization failed:', dbErr);
+  process.exit(1);
+}
 
 // ==================== USERS ====================
 app.post('/api/users', async (req, res) => {
@@ -361,27 +368,16 @@ app.get('/api/audit/activity', async (req, res) => {
 
 app.post('/api/audit/transaction', async (req, res) => {
   try {
-    let { userId, orderId, amount, paymentMethod, status, description } = req.body;
+    const { userId, orderId, amount, paymentMethod, status, description } = req.body;
     const logId = `txn-${uuidv4()}`;
     const now = new Date().toISOString();
-
-    // Defensive: if caller accidentally passed orderId as userId and email as orderId, fix it
-    if (userId && typeof userId === 'string' && userId.startsWith('ord-') && orderId && typeof orderId === 'string' && orderId.includes('@')) {
-      // swap into correct places
-      const suspectedOrderId = userId;
-      const suspectedEmail = orderId;
-      userId = null;
-      orderId = suspectedOrderId;
-      description = (description || '') + ` (customerEmail: ${suspectedEmail})`;
-      console.warn('Corrected swapped userId/orderId in transaction payload — preserved customer email in description');
-    }
-
+    
     await runQuery(
       `INSERT INTO transaction_log (id, userId, orderId, amount, paymentMethod, status, description, timestamp, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [logId, userId, orderId || null, amount, paymentMethod || null, status, description || null, now, now]
     );
-
+    
     res.json({ id: logId, userId, orderId, amount, paymentMethod, status, description, timestamp: now });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -739,7 +735,7 @@ app.get('*', (req, res) => {
 // ==================== SERVER STARTUP WITH ERROR HANDLING ====================
 const server = app.listen(PORT, () => {
   console.log(`🚀 Deepthi Server running on http://localhost:${PORT}`);
-  console.log(`📊 Database: server/deepthi.db`);
+  console.log(`📊 Database: ${path.join(__dirname, 'deepthi.db')}`);
 });
 
 // Handle port already in use errors
@@ -752,16 +748,17 @@ server.on('error', (err) => {
     const alternativePort = PORT + 1;
     const alternativeServer = app.listen(alternativePort, () => {
       console.log(`🚀 Deepthi Server running on http://localhost:${alternativePort}`);
-      console.log(`📊 Database: server/deepthi.db`);
       console.log(`⚠️  Note: Using port ${alternativePort} instead of ${PORT}`);
     });
     
     alternativeServer.on('error', (err) => {
       console.error('❌ Could not start server on any port:', err);
+      console.error('Stack trace:', err.stack);
       process.exit(1);
     });
   } else {
     console.error('❌ Server error:', err);
+    console.error('Stack trace:', err.stack);
     process.exit(1);
   }
 });
@@ -773,4 +770,17 @@ process.on('SIGTERM', () => {
     console.log('✅ Server closed');
     process.exit(0);
   });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  console.error('Stack trace:', err.stack);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
