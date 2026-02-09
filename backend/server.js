@@ -361,16 +361,27 @@ app.get('/api/audit/activity', async (req, res) => {
 
 app.post('/api/audit/transaction', async (req, res) => {
   try {
-    const { userId, orderId, amount, paymentMethod, status, description } = req.body;
+    let { userId, orderId, amount, paymentMethod, status, description } = req.body;
     const logId = `txn-${uuidv4()}`;
     const now = new Date().toISOString();
-    
+
+    // Defensive: if caller accidentally passed orderId as userId and email as orderId, fix it
+    if (userId && typeof userId === 'string' && userId.startsWith('ord-') && orderId && typeof orderId === 'string' && orderId.includes('@')) {
+      // swap into correct places
+      const suspectedOrderId = userId;
+      const suspectedEmail = orderId;
+      userId = null;
+      orderId = suspectedOrderId;
+      description = (description || '') + ` (customerEmail: ${suspectedEmail})`;
+      console.warn('Corrected swapped userId/orderId in transaction payload — preserved customer email in description');
+    }
+
     await runQuery(
       `INSERT INTO transaction_log (id, userId, orderId, amount, paymentMethod, status, description, timestamp, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [logId, userId, orderId || null, amount, paymentMethod || null, status, description || null, now, now]
     );
-    
+
     res.json({ id: logId, userId, orderId, amount, paymentMethod, status, description, timestamp: now });
   } catch (err) {
     res.status(400).json({ error: err.message });

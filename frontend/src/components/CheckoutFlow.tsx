@@ -127,8 +127,9 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ items, onComplete, onCancel
             // Log the successful transaction with order details
             const orderId = `ord-${Date.now()}`;
             const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0) + Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.05) + (items.reduce((sum, item) => sum + item.price * item.quantity, 0) > 1500 ? 0 : 150);
-            logTransaction(orderId, formData.email, total, paymentMethod, 'completed', `Order for ${formData.cardName}`);
-            logActivity(formData.email, 'ORDER_PLACED', `Order placed: ${orderId}`, { orderId, total, paymentMethod, items: items.length });
+            // Correct arg order: (userId, orderId, amount, paymentMethod, status)
+            await logTransaction(user?.id || null, orderId, total, paymentMethod, 'completed');
+            await logActivity(user?.id || null, 'ORDER_PLACED', `Order placed: ${orderId}`, { orderId, total, paymentMethod, items: items.length, customerEmail: formData.email });
             onComplete(formData);
           }} className="w-full py-3 md:py-5 bg-[#108242] text-white font-bold uppercase tracking-widest text-[7px] md:text-[10px] rounded-lg">Track Order</button>
         </div>
