@@ -71,10 +71,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const fetchBulkRequests = async () => {
         try {
           setBulkLoading(true);
-          const baseUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5001' 
-            : 'http://localhost:5002';
-          const response = await fetch(`${baseUrl}/api/bulk-requests`);
+          const response = await fetch(`/api/bulk-requests`);
           if (response.ok) {
             const data = await response.json();
             setBulkRequests(data);
@@ -387,7 +384,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           value={req.status} 
                           onChange={(e) => {
                             const newStatus = e.target.value;
-                            fetch(`http://localhost:5001/api/bulk-requests/${req.id}/status`, {
+                            fetch(`/api/bulk-requests/${req.id}/status`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ status: newStatus })

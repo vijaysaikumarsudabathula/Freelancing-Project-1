@@ -26,7 +26,7 @@ const BulkEnquiry: React.FC = () => {
       // Try port 5002 first (fallback), then 5001
       let response;
       try {
-        response = await fetch('http://localhost:5001/api/send-bulk-enquiry', {
+        response = await fetch('/api/send-bulk-enquiry', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
