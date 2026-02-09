@@ -414,7 +414,7 @@ app.get('/api/transactions/detailed', async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-};
+});
 
 // Update transaction status
 app.put('/api/transactions/:id/status', async (req, res) => {
