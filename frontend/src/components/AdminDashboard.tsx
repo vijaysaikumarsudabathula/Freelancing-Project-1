@@ -48,6 +48,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const [bulkRequests, setBulkRequests] = useState<any[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
+  
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [transactionStats, setTransactionStats] = useState<any>(null);
+  
+  const [loginHistory, setLoginHistory] = useState<any[]>([]);
+  const [loginsLoading, setLoginsLoading] = useState(false);
 
   // Load users from API on component mount
   useEffect(() => {
@@ -83,6 +91,55 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
       };
       fetchBulkRequests();
+    }
+  }, [tab]);
+
+  // Load transactions when payments tab is opened
+  useEffect(() => {
+    if (tab === 'payments') {
+      const fetchTransactions = async () => {
+        try {
+          setTransactionsLoading(true);
+          const [detailedRes, statsRes] = await Promise.all([
+            fetch('/api/transactions/detailed'),
+            fetch('/api/transactions/stats')
+          ]);
+          if (detailedRes.ok) {
+            const data = await detailedRes.json();
+            setTransactions(data);
+          }
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            setTransactionStats(stats);
+          }
+        } catch (error) {
+          console.error('Error fetching transactions:', error);
+        } finally {
+          setTransactionsLoading(false);
+        }
+      };
+      fetchTransactions();
+    }
+  }, [tab]);
+
+  // Load login history when users tab is opened
+  useEffect(() => {
+    if (tab === 'users') {
+      const fetchLogins = async () => {
+        try {
+          setLoginsLoading(true);
+          const response = await fetch('/api/audit/logins');
+          if (response.ok) {
+            const data = await response.json();
+            setLoginHistory(data);
+          }
+        } catch (error) {
+          console.error('Error fetching logins:', error);
+        } finally {
+          setLoginsLoading(false);
+        }
+      };
+      fetchLogins();
     }
   }, [tab]);
 
@@ -282,33 +339,114 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {tab === 'payments' && (
           <div className="animate-fade-in space-y-8 md:space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-                <div className="bg-[#2D5A27] p-4 sm:p-8 md:p-12 rounded-lg md:rounded-[2rem] lg:rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6 sm:p-10 md:p-12 opacity-5 transform scale-150 rotate-12">💰</div>
-                    <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-2 md:mb-3 lg:mb-4 relative z-10">Revenue</p>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold serif relative z-10">₹{totalRevenue.toLocaleString()}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+                <div className="bg-[#2D5A27] p-4 sm:p-6 md:p-8 rounded-lg md:rounded-[2rem] text-white shadow-2xl">
+                    <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-2 md:mb-3">Total Revenue</p>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold serif">₹{totalRevenue.toLocaleString()}</h2>
                 </div>
-                <div className="bg-white p-4 sm:p-8 md:p-12 rounded-lg md:rounded-[2rem] lg:rounded-[3.5rem] border border-gray-100 flex flex-col justify-center">
-                    <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#2D5A27]/40 mb-2 md:mb-3 lg:mb-4">Transactions</p>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold serif text-[#4A3728]">{orders.length} <span className="text-xs sm:text-sm md:text-base lg:text-lg font-sans text-gray-300 ml-2 md:ml-3 lg:ml-4 italic">Settled</span></h2>
+                <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg md:rounded-[2rem] border border-gray-100">
+                    <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#2D5A27]/40 mb-2 md:mb-3">Total Transactions</p>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold serif text-[#4A3728]">{transactionStats?.totalTransactions || 0}</h2>
+                </div>
+                <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg md:rounded-[2rem] border border-gray-100">
+                    <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#2D5A27]/40 mb-2 md:mb-3">Pending</p>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold serif text-yellow-600">{transactionStats?.pendingCount || 0}</h2>
                 </div>
             </div>
 
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#4A3728] mt-8">Detailed Transactions</h3>
+            
+            {transactionsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D5A27]"></div>
+                  <p className="mt-4 text-gray-500">Loading transactions...</p>
+                </div>
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="bg-[#FAF9F6] p-8 rounded-2xl text-center border border-[#2D5A27]/10">
+                <p className="text-[#2D5A27]/60">No transactions found</p>
+              </div>
+            ) : (
+              <div className="space-y-3 md:space-y-4">
+                {transactions.map((txn: any) => (
+                  <div 
+                    key={txn.id}
+                    onClick={() => setSelectedTransaction(txn)}
+                    className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer hover:border-[#A4C639]"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">ID</p>
+                        <p className="text-xs md:text-sm font-mono font-bold text-[#2D5A27] break-all">{txn.id.slice(0, 12)}...</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Customer</p>
+                        <p className="text-xs md:text-sm font-bold text-[#4A3728] truncate">{txn.customerName || txn.customerEmail || 'N/A'}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Amount</p>
+                        <p className="text-xs md:text-sm font-bold text-[#2D5A27]">₹{Number(txn.amount).toLocaleString()}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Method</p>
+                        <p className="text-xs md:text-sm font-bold text-[#4A3728] uppercase">{txn.paymentMethod || 'N/A'}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Status</p>
+                        <select 
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            fetch(`/api/transactions/${txn.id}/status`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: e.target.value })
+                            }).then(() => {
+                              setTransactions(transactions.map(t => t.id === txn.id ? {...t, status: e.target.value} : t));
+                            });
+                          }}
+                          value={txn.status}
+                          className={`text-xs font-bold px-2 py-1 rounded-lg border outline-none cursor-pointer ${
+                            txn.status === 'pending' ? 'bg-yellow-100 text-yellow-900 border-yellow-300' :
+                            txn.status === 'completed' ? 'bg-green-100 text-green-900 border-green-300' :
+                            'bg-red-100 text-red-900 border-red-300'
+                          }`}
+                        >
+                          <option value="pending">pending</option>
+                          <option value="completed">completed</option>
+                          <option value="failed">failed</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Date</p>
+                        <p className="text-xs md:text-sm text-gray-500 whitespace-nowrap">{new Date(txn.timestamp).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Payment Settings Button */}
-            <div className="mt-6 md:mt-8 lg:mt-10">
+            <div className="mt-8">
               <button 
                 onClick={() => setShowPaymentSettings(true)}
-                className="w-full py-4 sm:py-6 md:py-8 lg:py-10 bg-gradient-to-r from-[#A4C639] to-[#96b830] text-[#2D5A27] rounded-lg md:rounded-[2rem] lg:rounded-[3rem] font-black text-xs sm:text-sm md:text-base lg:text-lg uppercase tracking-widest shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 flex items-center justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6"
+                className="w-full py-4 sm:py-6 md:py-8 bg-gradient-to-r from-[#A4C639] to-[#96b830] text-[#2D5A27] rounded-lg md:rounded-[2rem] font-black text-xs sm:text-sm md:text-base uppercase tracking-widest shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
               >
-                <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl">⚙️</span>
-                <span>Configure Payment</span>
+                <span className="text-xl md:text-2xl">⚙️</span>
+                <span>Configure Payment Methods</span>
               </button>
             </div>
           </div>
         )}
 
         {tab === 'users' && (
-          <div className="animate-fade-in space-y-4 md:space-y-6 lg:space-y-8">
+          <div className="animate-fade-in space-y-6 md:space-y-8">
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#4A3728]">Registered Users</h2>
+              <span className="px-3 md:px-4 py-1 md:py-2 bg-[#A4C639] text-[#2D5A27] rounded-lg font-bold text-xs md:text-sm">{users.length} users</span>
+            </div>
+
             {usersLoading ? (
               <div className="flex items-center justify-center py-8 sm:py-12 md:py-16">
                 <div className="text-center">
@@ -321,27 +459,61 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <p className="text-gray-500 font-medium text-xs md:text-sm lg:text-base">No users found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-8">
-                {users.map(u => (
-                  <div key={u.id} className="bg-white p-3 md:p-4 lg:p-6 rounded-lg md:rounded-[1.5rem] lg:rounded-[2rem] border border-gray-100 flex flex-col items-center text-center shadow-sm hover:shadow-xl transition-all">
-                    <div className="w-14 sm:w-16 md:w-20 h-14 sm:h-16 md:h-20 bg-[#FAF9F6] rounded-full flex items-center justify-center text-xl sm:text-2xl md:text-3xl mb-2 md:mb-3 lg:mb-4 shadow-inner border-2 border-white">👤</div>
-                    <h4 className="font-bold text-[#4A3728] text-xs sm:text-sm md:text-lg mb-0.5 md:mb-1 line-clamp-2">{u.name}</h4>
-                    <p className="text-[7px] sm:text-[8px] md:text-[10px] text-gray-300 font-medium mb-1 md:mb-2 truncate w-full">{u.email}</p>
-                    <p className="text-[6px] sm:text-[8px] md:text-xs text-gray-400 mb-2 md:mb-3">ID: <code className="text-[5px] sm:text-[6px] md:text-[8px]">{u.id}</code></p>
-                    <div className="w-full mt-1 md:mt-2">
-                      <label className="text-[6px] sm:text-[7px] md:text-[9px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-1 md:mb-2 block">Role</label>
-                      <div className="flex items-center justify-center gap-2 md:gap-3">
-                        <select value={u.role} onChange={e => changeUserRole(u, e.target.value as any)} className="p-1 md:p-2 lg:p-3 rounded-lg md:rounded-xl bg-[#FAF9F6] border border-gray-100 text-[7px] sm:text-[8px] md:text-sm font-bold">
+              <div className="space-y-3 md:space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+                  {users.map(u => (
+                    <div key={u.id} className="bg-white p-3 md:p-4 lg:p-6 rounded-lg md:rounded-[1.5rem] border border-gray-100 flex flex-col shadow-sm hover:shadow-xl transition-all">
+                      <div className="w-full flex items-center justify-between mb-2 md:mb-3">
+                        <div className="w-10 sm:w-12 md:w-14 h-10 sm:h-12 md:h-14 bg-[#FAF9F6] rounded-full flex items-center justify-center text-lg sm:text-xl md:text-2xl">👤</div>
+                        <span className={`text-[6px] md:text-[8px] font-black px-2 py-1 rounded-lg ${u.role === 'admin' ? 'bg-[#2D5A27] text-white' : 'bg-[#A4C639]/20 text-[#2D5A27]'}`}>{u.role}</span>
+                      </div>
+                      <h4 className="font-bold text-[#4A3728] text-xs sm:text-sm md:text-lg mb-0.5 line-clamp-2">{u.name}</h4>
+                      <p className="text-[7px] sm:text-[8px] md:text-[10px] text-gray-300 font-medium mb-2 truncate">{u.email}</p>
+                      <p className="text-[7px] md:text-[9px] text-gray-400 mb-2">📱 {u.phone || 'N/A'}</p>
+                      <p className="text-[6px] md:text-[8px] text-gray-500 mb-2">Joined: {new Date(u.joinedDate).toLocaleDateString()}</p>
+                      {u.lastLogin && <p className="text-[6px] md:text-[8px] text-green-600 font-semibold">Last: {new Date(u.lastLogin).toLocaleDateString()} {new Date(u.lastLogin).toLocaleTimeString()}</p>}
+                      <div className="mt-3 w-full">
+                        <select value={u.role} onChange={e => changeUserRole(u, e.target.value as any)} className="w-full p-1.5 md:p-2 rounded-lg bg-[#FAF9F6] border border-gray-100 text-[7px] sm:text-[8px] md:text-sm font-bold outline-none cursor-pointer hover:border-[#A4C639]">
                           <option value="customer">customer</option>
                           <option value="admin">admin</option>
                         </select>
                       </div>
-                      <p className="text-[6px] sm:text-[7px] md:text-[10px] text-gray-400 mt-1 md:mt-2 line-clamp-2">Joined: {new Date(u.joinedDate).toLocaleDateString()}</p>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Login History Section */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#4A3728] mb-4">Login Activity</h3>
+              
+              {loginsLoading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D5A27]"></div>
+                  <p className="mt-2 text-gray-500 text-sm">Loading login history...</p>
+                </div>
+              ) : loginHistory.length === 0 ? (
+                <div className="bg-[#FAF9F6] p-6 rounded-xl text-center">
+                  <p className="text-[#2D5A27]/60">No login activity recorded</p>
+                </div>
+              ) : (
+                <div className="space-y-2 md:space-y-3 max-h-96 overflow-y-auto">
+                  {loginHistory.slice(0, 50).map((login: any) => (
+                    <div key={login.id} className="bg-white p-3 md:p-4 rounded-lg border border-gray-100 flex justify-between items-center text-xs md:text-sm">
+                      <div>
+                        <p className="font-bold text-[#4A3728]">{login.userName || login.userEmail || 'Unknown'}</p>
+                        <p className="text-gray-400 text-[7px] md:text-[9px]">{login.userEmail}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold text-xs ${login.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>{login.status || 'N/A'}</p>
+                        <p className="text-gray-400 text-[7px] md:text-[9px] whitespace-nowrap">{new Date(login.timestamp).toLocaleDateString()} {new Date(login.timestamp).toLocaleTimeString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -449,6 +621,125 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* Audit Log Modal */}
+
+      {/* Transaction Details Modal */}
+      {selectedTransaction && (
+        <div className="fixed inset-0 z-[122] flex items-center justify-center p-2 sm:p-3 md:p-4 bg-black/60 backdrop-blur-md animate-in fade-in overflow-y-auto">
+          <div className="bg-white w-full max-w-2xl rounded-lg md:rounded-[1.5rem] shadow-2xl border border-[#2D5A27]/20 overflow-hidden my-4">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#4A3728]">Transaction Details</h2>
+                <button onClick={() => setSelectedTransaction(null)} className="px-3 py-1 md:py-2 rounded-lg border text-sm font-medium hover:bg-gray-50">✕</button>
+              </div>
+              
+              <div className="space-y-4 md:space-y-6">
+                {/* Transaction ID */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#FAF9F6] p-3 md:p-4 rounded-lg">
+                    <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Transaction ID</p>
+                    <p className="text-xs md:text-sm font-mono font-bold text-[#2D5A27] break-all">{selectedTransaction.id}</p>
+                  </div>
+                  <div className="bg-[#FAF9F6] p-3 md:p-4 rounded-lg">
+                    <p className="text-[7px] md:text-[9px] font-black uppercase text-[#A4C639] mb-1">Date & Time</p>
+                    <p className="text-xs md:text-sm font-bold text-[#2D5A27]">{new Date(selectedTransaction.timestamp).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Customer Details */}
+                <div className="border-t pt-4">
+                  <p className="text-[8px] md:text-[10px] font-black uppercase text-[#2D5A27]/40 mb-3">Customer Information</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Name:</span>
+                      <span className="text-xs md:text-sm text-[#4A3728]">{selectedTransaction.customerName || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Email:</span>
+                      <span className="text-xs md:text-sm text-[#4A3728] break-all">{selectedTransaction.customerEmail || selectedTransaction.orderEmail || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Phone:</span>
+                      <span className="text-xs md:text-sm text-[#4A3728]">{selectedTransaction.customerPhone || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="border-t pt-4">
+                  <p className="text-[8px] md:text-[10px] font-black uppercase text-[#2D5A27]/40 mb-3">Payment Details</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Amount:</span>
+                      <span className="text-lg md:text-xl font-bold text-[#2D5A27]">₹{Number(selectedTransaction.amount).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Payment Method:</span>
+                      <span className={`px-3 py-1 rounded-lg text-xs md:text-sm font-bold uppercase ${
+                        selectedTransaction.paymentMethod === 'upi' ? 'bg-blue-100 text-blue-900' :
+                        selectedTransaction.paymentMethod === 'netbanking' ? 'bg-purple-100 text-purple-900' :
+                        'bg-gray-100 text-gray-900'
+                      }`}>
+                        {selectedTransaction.paymentMethod || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Status:</span>
+                      <select 
+                        value={selectedTransaction.status}
+                        onChange={(e) => {
+                          fetch(`/api/transactions/${selectedTransaction.id}/status`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: e.target.value })
+                          }).then(() => {
+                            setSelectedTransaction({...selectedTransaction, status: e.target.value});
+                            setTransactions(transactions.map(t => t.id === selectedTransaction.id ? {...t, status: e.target.value} : t));
+                          });
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs md:text-sm font-bold border outline-none cursor-pointer ${
+                          selectedTransaction.status === 'pending' ? 'bg-yellow-100 text-yellow-900 border-yellow-300' :
+                          selectedTransaction.status === 'completed' ? 'bg-green-100 text-green-900 border-green-300' :
+                          'bg-red-100 text-red-900 border-red-300'
+                        }`}
+                      >
+                        <option value="pending">pending</option>
+                        <option value="completed">completed</option>
+                        <option value="failed">failed</option>
+                      </select>
+                    </div>
+                    {selectedTransaction.description && (
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Notes:</span>
+                        <span className="text-xs md:text-sm text-[#4A3728] text-right">{selectedTransaction.description}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                {selectedTransaction.orderId && (
+                  <div className="border-t pt-4">
+                    <p className="text-[8px] md:text-[10px] font-black uppercase text-[#2D5A27]/40 mb-3">Order Reference</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs md:text-sm font-bold text-[#2D5A27]">Order ID:</span>
+                      <span className="text-xs md:text-sm font-mono text-[#4A3728]">{selectedTransaction.orderId}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 flex gap-3">
+                  <button 
+                    onClick={() => setSelectedTransaction(null)}
+                    className="flex-1 py-3 bg-[#2D5A27] text-white rounded-lg font-bold uppercase text-xs md:text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DB Setup Modal */}
       {showDBSetup && (

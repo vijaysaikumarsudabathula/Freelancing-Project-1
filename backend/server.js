@@ -386,6 +386,121 @@ app.get('/api/audit/transaction', async (req, res) => {
   }
 });
 
+// ==================== ENHANCED PAYMENT & TRANSACTION APIS ====================
+// Get detailed transaction logs with user and order information
+app.get('/api/transactions/detailed', async (req, res) => {
+  try {
+    const transactions = await allQuery(`
+      SELECT 
+        t.id, 
+        t.userId, 
+        t.orderId, 
+        t.amount, 
+        t.paymentMethod, 
+        t.status,
+        t.description,
+        t.timestamp,
+        u.email as customerEmail,
+        u.name as customerName,
+        u.phone as customerPhone,
+        o.id as orderId,
+        o.customerEmail as orderEmail
+      FROM transaction_log t
+      LEFT JOIN users u ON t.userId = u.id
+      LEFT JOIN orders o ON t.orderId = o.id
+      ORDER BY t.timestamp DESC
+      LIMIT 200
+    `);
+    res.json(transactions);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Update transaction status
+app.put('/api/transactions/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status is required' });
+    
+    await runQuery(
+      `UPDATE transaction_log SET status = ? WHERE id = ?`,
+      [status, req.params.id]
+    );
+    
+    const transaction = await getQuery(
+      `SELECT * FROM transaction_log WHERE id = ?`,
+      [req.params.id]
+    );
+    res.json(transaction);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get transaction statistics
+app.get('/api/transactions/stats', async (req, res) => {
+  try {
+    const stats = await getQuery(`
+      SELECT 
+        COUNT(*) as totalTransactions,
+        SUM(amount) as totalAmount,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completedCount,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pendingCount,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failedCount
+      FROM transaction_log
+    `);
+    res.json(stats);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get login history for a user
+app.get('/api/audit/logins', async (req, res) => {
+  try {
+    const logins = await allQuery(`
+      SELECT 
+        l.*,
+        u.name as userName,
+        u.email as userEmail
+      FROM login_history l
+      LEFT JOIN users u ON l.userId = u.id
+      ORDER BY l.timestamp DESC
+      LIMIT 500
+    `);
+    res.json(logins);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get user activity summary
+app.get('/api/users/:id/activity', async (req, res) => {
+  try {
+    const activity = await allQuery(`
+      SELECT 
+        'login' as type,
+        timestamp as date,
+        status as details
+      FROM login_history
+      WHERE userId = ?
+      UNION
+      SELECT 
+        'order' as type,
+        date as timestamp_col,
+        status as details
+      FROM orders
+      WHERE userId = ?
+      ORDER BY date DESC
+      LIMIT 100
+    `, [req.params.id, req.params.id]);
+    res.json(activity);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ==================== BULK ENQUIRY ====================
 app.post('/api/send-bulk-enquiry', async (req, res) => {
   try {

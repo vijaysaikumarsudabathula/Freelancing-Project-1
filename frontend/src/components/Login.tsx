@@ -64,6 +64,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCancel }) => {
           try {
             const existingUser = await api.getUserByEmail(inputEmail);
             if (existingUser && existingUser.password === inputPass && existingUser.role === 'customer') {
+              // Update last login time
+              try {
+                await api.updateUser(existingUser.id, { lastLogin: new Date().toISOString() });
+              } catch (updateErr) {
+                console.error('Error updating last login:', updateErr);
+              }
               // Log successful customer login
               try {
                 await logLogin(existingUser.id, existingUser.email, 'success', 'Customer login successful');
