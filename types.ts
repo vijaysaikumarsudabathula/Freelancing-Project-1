@@ -10,7 +10,7 @@ export interface Product {
   description: string;
   description_te: string;
   image: string;
-  category: 'plates' | 'bowls' | 'cutlery' | 'sets' | 'organic' | 'earthenware';
+  unit: 'grams' | 'per piece' | 'kg' | 'liter';
   benefits: string[];
 }
 

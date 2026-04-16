@@ -1,8 +1,53 @@
 const API_URL = (import.meta.env.VITE_API_URL as string) || '/api';
 
+/**
+ * Fetch wrapper with automatic retry logic for network failures
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  maxRetries = 2
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Don't retry on non-network errors
+      if (error instanceof Error && error.name === 'TypeError' && !error.message.includes('fetch')) {
+        throw error;
+      }
+
+      // Only retry if we haven't exceeded max attempts
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 500; // Exponential backoff: 500ms, 1s, 2s, etc.
+        console.warn(
+          `API request failed (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
+          error
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('API request failed after all retry attempts');
+}
+
 // ==================== USERS ====================
 export async function createUser(userData: any) {
-  const res = await fetch(`${API_URL}/users`, {
+  const res = await fetchWithRetry(`${API_URL}/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData)
@@ -12,25 +57,25 @@ export async function createUser(userData: any) {
 }
 
 export async function getUsers() {
-  const res = await fetch(`${API_URL}/users`);
+  const res = await fetchWithRetry(`${API_URL}/users`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getUser(id: string) {
-  const res = await fetch(`${API_URL}/users/${id}`);
+  const res = await fetchWithRetry(`${API_URL}/users/${id}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getUserByEmail(email: string) {
-  const res = await fetch(`${API_URL}/users/email/${email}`);
+  const res = await fetchWithRetry(`${API_URL}/users/email/${email}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function updateUser(id: string, updates: any) {
-  const res = await fetch(`${API_URL}/users/${id}`, {
+  const res = await fetchWithRetry(`${API_URL}/users/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -40,14 +85,14 @@ export async function updateUser(id: string, updates: any) {
 }
 
 export async function deleteUser(id: string) {
-  const res = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+  const res = await fetchWithRetry(`${API_URL}/users/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 // ==================== PRODUCTS ====================
 export async function createProduct(productData: any) {
-  const res = await fetch(`${API_URL}/products`, {
+  const res = await fetchWithRetry(`${API_URL}/products`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(productData)
@@ -57,19 +102,19 @@ export async function createProduct(productData: any) {
 }
 
 export async function getProducts() {
-  const res = await fetch(`${API_URL}/products`);
+  const res = await fetchWithRetry(`${API_URL}/products`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getProduct(id: string) {
-  const res = await fetch(`${API_URL}/products/${id}`);
+  const res = await fetchWithRetry(`${API_URL}/products/${id}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function updateProduct(id: string, updates: any) {
-  const res = await fetch(`${API_URL}/products/${id}`, {
+  const res = await fetchWithRetry(`${API_URL}/products/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -79,7 +124,7 @@ export async function updateProduct(id: string, updates: any) {
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+  const res = await fetchWithRetry(`${API_URL}/products/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -96,25 +141,25 @@ export async function createOrder(orderData: any) {
 }
 
 export async function getOrders() {
-  const res = await fetch(`${API_URL}/orders`);
+  const res = await fetchWithRetry(`${API_URL}/orders`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getOrder(id: string) {
-  const res = await fetch(`${API_URL}/orders/${id}`);
+  const res = await fetchWithRetry(`${API_URL}/orders/${id}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getOrdersByUser(userId: string) {
-  const res = await fetch(`${API_URL}/orders/user/${userId}`);
+  const res = await fetchWithRetry(`${API_URL}/orders/user/${userId}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function updateOrder(id: string, updates: any) {
-  const res = await fetch(`${API_URL}/orders/${id}`, {
+  const res = await fetchWithRetry(`${API_URL}/orders/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -125,7 +170,7 @@ export async function updateOrder(id: string, updates: any) {
 
 // ==================== ADDRESSES ====================
 export async function createAddress(addressData: any) {
-  const res = await fetch(`${API_URL}/addresses`, {
+  const res = await fetchWithRetry(`${API_URL}/addresses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(addressData)
@@ -135,20 +180,20 @@ export async function createAddress(addressData: any) {
 }
 
 export async function getAddressesByUser(userId: string) {
-  const res = await fetch(`${API_URL}/addresses/user/${userId}`);
+  const res = await fetchWithRetry(`${API_URL}/addresses/user/${userId}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function deleteAddress(id: string) {
-  const res = await fetch(`${API_URL}/addresses/${id}`, { method: 'DELETE' });
+  const res = await fetchWithRetry(`${API_URL}/addresses/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 // ==================== AUDIT LOGS ====================
 export async function logLogin(loginData: any) {
-  const res = await fetch(`${API_URL}/audit/login`, {
+  const res = await fetchWithRetry(`${API_URL}/audit/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(loginData)
@@ -158,13 +203,13 @@ export async function logLogin(loginData: any) {
 }
 
 export async function getLoginHistory() {
-  const res = await fetch(`${API_URL}/audit/login`);
+  const res = await fetchWithRetry(`${API_URL}/audit/login`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function logActivity(activityData: any) {
-  const res = await fetch(`${API_URL}/audit/activity`, {
+  const res = await fetchWithRetry(`${API_URL}/audit/activity`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(activityData)
@@ -174,13 +219,13 @@ export async function logActivity(activityData: any) {
 }
 
 export async function getActivityLog() {
-  const res = await fetch(`${API_URL}/audit/activity`);
+  const res = await fetchWithRetry(`${API_URL}/audit/activity`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function logTransaction(transactionData: any) {
-  const res = await fetch(`${API_URL}/audit/transaction`, {
+  const res = await fetchWithRetry(`${API_URL}/audit/transaction`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(transactionData)
@@ -190,7 +235,7 @@ export async function logTransaction(transactionData: any) {
 }
 
 export async function getTransactionLog() {
-  const res = await fetch(`${API_URL}/audit/transaction`);
+  const res = await fetchWithRetry(`${API_URL}/audit/transaction`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -198,7 +243,7 @@ export async function getTransactionLog() {
 // ==================== HEALTH CHECK ====================
 export async function checkServerHealth() {
   try {
-    const res = await fetch(`${API_URL}/health`);
+    const res = await fetchWithRetry(`${API_URL}/health`);
     return res.ok;
   } catch {
     return false;

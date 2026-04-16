@@ -5,20 +5,23 @@ import { Language } from '../types';
 interface HeroProps {
   onExplore?: () => void;
   onStory?: () => void;
+  onBulkEnquiry?: () => void;
   lang?: Language;
 }
 
-const Hero: React.FC<HeroProps> = ({ onExplore, lang = 'en' }) => {
+const Hero: React.FC<HeroProps> = ({ onExplore, onBulkEnquiry, lang = 'en' }) => {
   const t = {
     en: {
       title: "Sustainable Tableware for the Conscious Home",
       subtitle: "100% Natural. Biodegradable. Chemical Free.",
-      cta: "Shop the Collection"
+      cta: "Shop Wholesale",
+      bulkCta: "Request Bulk Order"
     },
     te: {
       title: "పర్యావరణ హితమైన ఆకు ప్లేట్లు",
       subtitle: "100% సహజం. ప్లాస్టిక్ లేదు.",
-      cta: "వస్తువులను చూడండి"
+      cta: "వస్తువులను చూడండి",
+      bulkCta: "బల్క్ ఆర్డర్"
     }
   }[lang];
 
@@ -40,12 +43,20 @@ const Hero: React.FC<HeroProps> = ({ onExplore, lang = 'en' }) => {
         <p className="text-sm md:text-lg lg:text-xl text-[#108242] mb-8 md:mb-12 font-medium italic">
           {t.subtitle}
         </p>
-        <button 
-          onClick={onExplore}
-          className="px-8 md:px-12 py-3 md:py-5 bg-[#108242] text-white text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#A4C639] transition-all duration-500 shadow-xl active:scale-95"
-        >
-          {t.cta}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
+          <button 
+            onClick={onExplore}
+            className="px-8 md:px-12 py-3 md:py-5 bg-[#108242] text-white text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#0d6233] transition-all duration-500 shadow-xl active:scale-95 rounded-lg"
+          >
+            {t.cta}
+          </button>
+          <button 
+            onClick={onBulkEnquiry}
+            className="px-8 md:px-12 py-3 md:py-5 border-2 border-[#108242] text-[#108242] text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#108242]/5 transition-all duration-500 shadow-lg active:scale-95 rounded-lg"
+          >
+            📋 {t.bulkCta}
+          </button>
+        </div>
       </div>
 
       <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30 hidden sm:flex">

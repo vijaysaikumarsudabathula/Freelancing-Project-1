@@ -16,7 +16,10 @@ import Logo from './components/Logo';
 import CustomerDashboard from './components/CustomerDashboard';
 import Footer from './components/Footer';
 import SavedOrders from './components/SavedOrders';
+import BackendStatusBanner from './components/BackendStatusBanner';
+import HomePage from './components/HomePage';
 import * as DB from './services/database';
+import { startHealthCheck, stopHealthCheck, onBackendDown, onBackendRecovered } from './services/backendRecovery';
 
 const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
@@ -37,13 +40,18 @@ const App: React.FC = () => {
   const [cartAnimate, setCartAnimate] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [backendHealthy, setBackendHealthy] = useState(true);
+  const [backendError, setBackendError] = useState<string | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const [operationSuccess, setOperationSuccess] = useState<string | null>(null);
   const userDropdownRef = useRef<HTMLDivElement | null>(null);
   const logoutTimerRef = useRef<number | null>(null);
+  const healthCheckRef = useRef<boolean>(false);
 
   const t = {
     en: { 
       navHome: "Home", 
-      navShop: "Collections", 
+      navShop: "Wholesale", 
       navSaved: "My Orders", 
       navBulk: "Bulk Enquiries",
       login: "Member Access", 
@@ -90,6 +98,34 @@ const App: React.FC = () => {
       window.removeEventListener('keydown', resetLogoutTimer);
     };
   }, [user, resetLogoutTimer]);
+
+  // Setup backend health monitoring on mount
+  useEffect(() => {
+    if (healthCheckRef.current) return;
+    
+    healthCheckRef.current = true;
+    
+    // Start health check
+    startHealthCheck();
+
+    // Listen to backend down events
+    onBackendDown((detail) => {
+      console.warn('🔴 Backend is down:', detail.message);
+      setBackendHealthy(false);
+      setBackendError(detail.message);
+    });
+
+    // Listen to backend recovery events
+    onBackendRecovered((detail) => {
+      console.log('🟢 Backend recovered:', detail.message);
+      setBackendHealthy(true);
+      setBackendError(null);
+    });
+
+    return () => {
+      stopHealthCheck();
+    };
+  }, []);
 
   useEffect(() => {
     const startup = async () => {
@@ -294,7 +330,78 @@ const App: React.FC = () => {
 
     if (user?.role === 'admin' && currentView === 'admin') return (
       <div className="pt-24">
-        <AdminDashboard products={products} orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} onAddProduct={p => { DB.addProduct(p).then(() => { DB.getProductsAsync().then(setProducts); }); }} onUpdateProduct={p => { DB.updateProduct(p).then(() => { DB.getProductsAsync().then(setProducts); }); }} onDeleteProduct={id => { DB.deleteProduct(id).then(() => { DB.getProductsAsync().then(setProducts); }); }} lang={currentLang} />
+        {operationError && (
+          <div className="max-w-7xl mx-auto px-4 mb-4">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <p className="text-sm font-medium text-red-800">Error: {operationError}</p>
+                </div>
+                <button onClick={() => setOperationError(null)} className="ml-auto text-red-500 hover:text-red-700">✕</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {operationSuccess && (
+          <div className="max-w-7xl mx-auto px-4 mb-4">
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <p className="text-sm font-medium text-green-800">{operationSuccess}</p>
+                </div>
+                <button onClick={() => setOperationSuccess(null)} className="ml-auto text-green-500 hover:text-green-700">✕</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <AdminDashboard 
+          products={products} 
+          orders={orders} 
+          onUpdateOrderStatus={handleUpdateOrderStatus} 
+          onAddProduct={p => { 
+            setOperationError(null);
+            DB.addProduct(p)
+              .then(() => {
+                setOperationSuccess('✅ Product added successfully!');
+                return DB.getProductsAsync();
+              })
+              .then(setProducts)
+              .catch(e => {
+                const errMsg = e instanceof Error ? e.message : String(e);
+                console.error('Failed to add product:', errMsg);
+                setOperationError(`Failed to add product: ${errMsg}`);
+              });
+          }} 
+          onUpdateProduct={p => { 
+            setOperationError(null);
+            DB.updateProduct(p)
+              .then(() => {
+                setOperationSuccess('✅ Product updated successfully!');
+                return DB.getProductsAsync();
+              })
+              .then(setProducts)
+              .catch(e => {
+                const errMsg = e instanceof Error ? e.message : String(e);
+                console.error('Failed to update product:', errMsg);
+                setOperationError(`Failed to update product: ${errMsg}`);
+              });
+          }} 
+          onDeleteProduct={id => { 
+            setOperationError(null);
+            DB.deleteProduct(id)
+              .then(() => {
+                setOperationSuccess('✅ Product deleted successfully!');
+                return DB.getProductsAsync();
+              })
+              .then(setProducts)
+              .catch(e => {
+                const errMsg = e instanceof Error ? e.message : String(e);
+                console.error('Failed to delete product:', errMsg);
+                setOperationError(`Failed to delete product: ${errMsg}`);
+              });
+          }} 
+          lang={currentLang} 
+        />
       </div>
     );
 
@@ -302,7 +409,7 @@ const App: React.FC = () => {
       case 'shop': return (
         <div className="pt-24 animate-fade-in">
           <div className="max-w-7xl mx-auto px-4 py-16">
-            <h1 className="text-5xl font-bold serif text-[#4A3728] mb-12 text-center">Our Collections</h1>
+            <h1 className="text-5xl font-bold serif text-[#4A3728] mb-12 text-center">Our Wholesale</h1>
             <div className="flex justify-center mb-12">
                <input 
                 type="text" 
@@ -334,24 +441,17 @@ const App: React.FC = () => {
         );
       case 'about': return <div className="pt-24"><About lang={currentLang} /></div>;
       default: return (
-        <div className="animate-fade-in">
-          <Hero 
-            onExplore={() => setCurrentView('shop')} 
-            onStory={() => setCurrentView('about')}
-            lang={currentLang} 
+        <div className="pt-24">
+          <HomePage 
+            products={products}
+            onAddToCart={addToCart}
+            onExplore={() => setCurrentView('shop')}
+            onBulkEnquiry={() => setCurrentView('bulk-enquiry')}
+            wishlist={wishlist}
+            onToggleWishlist={toggleWishlist}
+            isLoading={!isDBReady}
+            lang={currentLang}
           />
-          <Impact />
-          <div className="py-32">
-             <div className="max-w-7xl mx-auto px-4 text-center mb-20">
-               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Hand-Picked for You</span>
-               <h2 className="text-5xl font-bold serif text-[#4A3728]">Selected Discoveries</h2>
-             </div>
-             <ProductList products={products.slice(0, 4)} onAddToCart={addToCart} lang={currentLang} isLoading={!isDBReady} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
-             <div className="text-center mt-20">
-               <button onClick={() => setCurrentView('shop')} className="btn-leaf px-12 py-5 text-[10px] font-black uppercase tracking-widest shadow-2xl">View Entire Catalog</button>
-             </div>
-          </div>
-          <About lang={currentLang} />
         </div>
       );
     }
@@ -359,6 +459,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
+      <BackendStatusBanner />
       <nav className="fixed top-0 w-full z-[60] bg-white/90 backdrop-blur-xl border-b border-[#108242]/5 flex flex-col">
         <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center py-3 md:py-4">
           <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className="flex items-center group scale-75 md:scale-100">

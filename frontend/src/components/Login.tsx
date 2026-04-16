@@ -247,9 +247,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCancel }) => {
               {loading ? 'Processing...' : (mode === 'signup' ? 'Create Account' : 'Secure Login')}
             </button>
 
-            {mode === 'signup' && (
-              <p className="mt-3 text-[9px] md:text-[11px] text-gray-500 leading-relaxed">📊 All data is saved to the backend SQLite database and persists permanently on the server.</p>
-            )}
           </form>
 
           <button 

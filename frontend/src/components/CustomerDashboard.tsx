@@ -64,7 +64,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const t = {
     en: {
       overview: "Home Feed",
-      store: "Shop Collection",
+      store: "Shop Wholesale",
       orders: "My Orders",
       profile: "Settings",
       welcome: `Hello, ${user.name.split(' ')[0]}`,

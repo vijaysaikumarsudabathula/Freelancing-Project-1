@@ -40,13 +40,68 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// Initialize database on startup
+// Health check endpoint - returns immediately
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Detailed health check with database test
+app.get('/api/health/detailed', async (req, res) => {
+  try {
+    const result = await getQuery('SELECT 1 as test');
+    res.status(200).json({ 
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  } catch (err) {
+    res.status(503).json({ 
+      status: 'unhealthy',
+      database: 'disconnected',
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Initialize database on startup with retry logic
+let dbInitialized = false;
+let initAttempts = 0;
+const MAX_INIT_ATTEMPTS = 3;
+
+async function initializeDBWithRetry() {
+  while (initAttempts < MAX_INIT_ATTEMPTS && !dbInitialized) {
+    try {
+      initAttempts++;
+      console.log(`📍 Database initialization attempt ${initAttempts}/${MAX_INIT_ATTEMPTS}...`);
+      await initializeDatabase();
+      dbInitialized = true;
+      console.log('✅ Database initialized successfully');
+      return;
+    } catch (dbErr) {
+      console.error(`❌ Attempt ${initAttempts} failed:`, dbErr.message);
+      if (initAttempts < MAX_INIT_ATTEMPTS) {
+        console.log(`⏳ Retrying in 3 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+  }
+  
+  if (!dbInitialized) {
+    console.error('❌ Fatal: Database initialization failed after all retry attempts');
+    process.exit(1);
+  }
+}
+
 try {
-  console.log('📍 Initializing database...');
-  await initializeDatabase();
-  console.log('✅ Database initialized successfully');
+  await initializeDBWithRetry();
 } catch (dbErr) {
-  console.error('❌ Fatal: Database initialization failed:', dbErr);
+  console.error('❌ Unexpected error during DB initialization:', dbErr);
   process.exit(1);
 }
 
@@ -134,17 +189,17 @@ app.delete('/api/users/:id', async (req, res) => {
 // ==================== PRODUCTS ====================
 app.post('/api/products', async (req, res) => {
   try {
-    const { id, name, name_te, price, category, description, description_te, image, benefits } = req.body;
+    const { id, name, name_te, price, unit, description, description_te, image, benefits } = req.body;
     const productId = id || `p-${uuidv4()}`;
     const now = new Date().toISOString();
     
     await runQuery(
-      `INSERT INTO products (id, name, name_te, price, category, description, description_te, image, benefits, createdAt)
+      `INSERT INTO products (id, name, name_te, price, unit, description, description_te, image, benefits, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [productId, name, name_te || null, price, category, description || null, description_te || null, image || null, JSON.stringify(benefits || []), now]
+      [productId, name, name_te || null, price, unit, description || null, description_te || null, image || null, JSON.stringify(benefits || []), now]
     );
     
-    res.json({ id: productId, name, name_te, price, category, description, description_te, image, benefits });
+    res.json({ id: productId, name, name_te, price, unit, description, description_te, image, benefits });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -171,14 +226,14 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.put('/api/products/:id', async (req, res) => {
   try {
-    const { name, name_te, price, category, description, description_te, image, benefits } = req.body;
+    const { name, name_te, price, unit, description, description_te, image, benefits } = req.body;
     const updates = [];
     const values = [];
     
     if (name !== undefined) { updates.push('name = ?'); values.push(name); }
     if (name_te !== undefined) { updates.push('name_te = ?'); values.push(name_te); }
     if (price !== undefined) { updates.push('price = ?'); values.push(price); }
-    if (category !== undefined) { updates.push('category = ?'); values.push(category); }
+    if (unit !== undefined) { updates.push('unit = ?'); values.push(unit); }
     if (description !== undefined) { updates.push('description = ?'); values.push(description); }
     if (description_te !== undefined) { updates.push('description_te = ?'); values.push(description_te); }
     if (image !== undefined) { updates.push('image = ?'); values.push(image); }
@@ -517,10 +572,17 @@ app.get('/api/users/:id/activity', async (req, res) => {
 // ==================== BULK ENQUIRY ====================
 app.post('/api/send-bulk-enquiry', async (req, res) => {
   try {
-    const { name, company, email, phone, quantity, eventType, message } = req.body;
+    const { name, email, phone, quantity, eventType, message } = req.body;
     
     // Validate form data
     if (!name || !email || !phone) {
+      const errorId = logError(
+        'VALIDATION_ERROR',
+        'Missing required fields in bulk enquiry',
+        'POST /api/send-bulk-enquiry',
+        `Received: name=${name}, email=${email}, phone=${phone}`
+      );
+      sendErrorNotificationToSupport(errorId, 'VALIDATION_ERROR', 'Incomplete bulk enquiry submission', 'POST /api/send-bulk-enquiry');
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -528,33 +590,82 @@ app.post('/api/send-bulk-enquiry', async (req, res) => {
     const enquiryId = `enq-${uuidv4()}`;
     const now = new Date().toISOString();
     
-    await runQuery(
-      `INSERT INTO bulk_requests (id, userId, productName, quantity, requirements, status, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [enquiryId, phone, eventType, quantity || '', `Name: ${name}, Email: ${email}, Company: ${company || ''}, Phone: ${phone}, Message: ${message || ''}`, 'pending', now]
-    );
+    try {
+      await runQuery(
+        `INSERT INTO bulk_requests (id, userId, productName, quantity, requirements, status, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [enquiryId, phone, eventType || 'general', quantity || '', `Name: ${name}, Email: ${email}, Event Type: ${eventType || 'N/A'}, Phone: ${phone}, Message: ${message || ''}`, 'pending', now]
+      );
+    } catch (dbErr) {
+      const errorId = logError(
+        'DATABASE_ERROR',
+        `Failed to insert bulk enquiry: ${dbErr.message}`,
+        'POST /api/send-bulk-enquiry',
+        `Enquiry ID: ${enquiryId}, Customer: ${name}`
+      );
+      sendErrorNotificationToSupport(
+        errorId,
+        'DATABASE_ERROR',
+        `Failed to save bulk enquiry for ${name}`,
+        'POST /api/send-bulk-enquiry',
+        `Contact: ${email} / ${phone}`
+      );
+      return res.status(500).json({ error: 'Failed to save enquiry to database' });
+    }
 
     // Send Email
-    sendEmailNotification({
-      name,
-      company,
-      email,
-      phone,
-      quantity,
-      eventType,
-      message,
-      enquiryId
-    });
+    try {
+      sendEmailNotification({
+        name,
+        email,
+        phone,
+        quantity,
+        eventType,
+        message,
+        enquiryId
+      });
+    } catch (emailErr) {
+      const errorId = logError(
+        'EMAIL_ERROR',
+        `Failed to send email notification: ${emailErr.message}`,
+        'POST /api/send-bulk-enquiry',
+        `Enquiry ID: ${enquiryId}`
+      );
+      sendErrorNotificationToSupport(errorId, 'EMAIL_ERROR', 'Failed to send bulk enquiry email', 'POST /api/send-bulk-enquiry');
+      // Don't fail the request - email is not critical
+    }
 
     // Send SMS
-    sendSMSNotification({
-      phone,
-      name,
-      enquiryId
-    });
+    try {
+      sendSMSNotification({
+        phone,
+        name,
+        enquiryId
+      });
+    } catch (smsErr) {
+      const errorId = logError(
+        'SMS_ERROR',
+        `Failed to send SMS notification: ${smsErr.message}`,
+        'POST /api/send-bulk-enquiry',
+        `Enquiry ID: ${enquiryId}`
+      );
+      // Don't fail the request - SMS is not critical
+    }
 
     res.json({ success: true, message: 'Bulk enquiry received. We will contact you soon!', enquiryId });
   } catch (err) {
+    const errorId = logError(
+      'BULK_ENQUIRY_ERROR',
+      err.message,
+      'POST /api/send-bulk-enquiry',
+      JSON.stringify(req.body)
+    );
+    sendErrorNotificationToSupport(
+      errorId,
+      'BULK_ENQUIRY_ERROR',
+      `Unexpected error processing bulk enquiry: ${err.message}`,
+      'POST /api/send-bulk-enquiry'
+    );
     console.error('Error in bulk enquiry:', err);
     res.status(500).json({ error: 'Failed to process bulk enquiry' });
   }
@@ -593,8 +704,128 @@ app.put('/api/bulk-requests/:id/status', async (req, res) => {
   }
 });
 
+// ==================== ERROR LOGS ENDPOINTS ====================
+// Get all error logs
+app.get('/api/error-logs', async (req, res) => {
+  try {
+    const errors = await allQuery(`SELECT * FROM error_logs ORDER BY createdAt DESC LIMIT 100`);
+    res.json(errors);
+  } catch (err) {
+    console.error('Error fetching error logs:', err);
+    res.status(500).json({ error: 'Failed to fetch error logs' });
+  }
+});
+
+// Get unresolved errors count
+app.get('/api/error-logs/count/unresolved', async (req, res) => {
+  try {
+    const result = await getQuery(
+      `SELECT COUNT(*) as count FROM error_logs WHERE resolved = 0`,
+      []
+    );
+    res.json({ unresolvedCount: result?.count || 0 });
+  } catch (err) {
+    console.error('Error fetching error count:', err);
+    res.status(500).json({ error: 'Failed to fetch error count' });
+  }
+});
+
+// Mark error as resolved
+app.put('/api/error-logs/:id/resolve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await runQuery(`UPDATE error_logs SET resolved = 1 WHERE id = ?`, [id]);
+    res.json({ success: true, message: 'Error marked as resolved' });
+  } catch (err) {
+    console.error('Error updating error log:', err);
+    res.status(500).json({ error: 'Failed to update error log' });
+  }
+});
+
+// ==================== TRANSLATIONS/LOCALIZATION MANAGEMENT ====================
+// Get all translations
+app.get('/api/translations', async (req, res) => {
+  try {
+    const translations = await allQuery(`SELECT * FROM translations ORDER BY module, key`);
+    res.json(translations);
+  } catch (err) {
+    console.error('Error fetching translations:', err);
+    res.status(500).json({ error: 'Failed to fetch translations' });
+  }
+});
+
+// Get translations by module
+app.get('/api/translations/module/:module', async (req, res) => {
+  try {
+    const { module } = req.params;
+    const translations = await allQuery(`SELECT * FROM translations WHERE module = ? ORDER BY key`, [module]);
+    res.json(translations);
+  } catch (err) {
+    console.error('Error fetching translations by module:', err);
+    res.status(500).json({ error: 'Failed to fetch translations' });
+  }
+});
+
+// Update translation
+app.put('/api/translations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { textEn, textTe } = req.body;
+
+    if (!textEn || !textTe) {
+      return res.status(400).json({ error: 'Both English and Telugu text are required' });
+    }
+
+    await runQuery(
+      `UPDATE translations SET textEn = ?, textTe = ?, updatedAt = ? WHERE id = ?`,
+      [textEn, textTe, new Date().toISOString(), id]
+    );
+    res.json({ success: true, message: 'Translation updated successfully' });
+  } catch (err) {
+    console.error('Error updating translation:', err);
+    res.status(500).json({ error: 'Failed to update translation' });
+  }
+});
+
+// Create new translation
+app.post('/api/translations', async (req, res) => {
+  try {
+    const { key, module, textEn, textTe, description } = req.body;
+
+    if (!key || !module || !textEn || !textTe) {
+      return res.status(400).json({ error: 'Key, module, English and Telugu text are required' });
+    }
+
+    const transId = `trans-${uuidv4()}`;
+    const now = new Date().toISOString();
+
+    await runQuery(
+      `INSERT INTO translations (id, key, module, textEn, textTe, description, updatedAt, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [transId, key, module, textEn, textTe, description || '', now, now]
+    );
+
+    res.json({ success: true, message: 'Translation created', id: transId });
+  } catch (err) {
+    console.error('Error creating translation:', err);
+    res.status(500).json({ error: 'Failed to create translation' });
+  }
+});
+
+// Get available modules for translations
+app.get('/api/translations/modules/list', async (req, res) => {
+  try {
+    const result = await allQuery(`SELECT DISTINCT module FROM translations ORDER BY module`);
+    const modules = result.map(r => r.module);
+    res.json(modules);
+  } catch (err) {
+    console.error('Error fetching modules:', err);
+    res.status(500).json({ error: 'Failed to fetch modules' });
+  }
+});
+
 // Email notification function
-function sendEmailNotification({ name, company, email, phone, quantity, eventType, message, enquiryId }) {
+function sendEmailNotification({ name, email, phone, quantity, eventType, message, enquiryId }) {
   try {
     const emailBody = `
 BULK ENQUIRY RECEIVED
@@ -604,12 +835,11 @@ Timestamp: ${new Date().toISOString()}
 
 CUSTOMER DETAILS:
 Name: ${name}
-Company: ${company || 'N/A'}
 Email: ${email}
 Phone: ${phone}
 
 ENQUIRY DETAILS:
-Event Type: ${eventType}
+Event Type/Purpose: ${eventType || 'N/A'}
 Quantity: ${quantity || 'Not specified'}
 Message: ${message || 'N/A'}
 
@@ -631,12 +861,11 @@ Assign the enquiry to a sales representative and follow up within 24 hours.
         
         <h3 style="color: #4A3728;">CUSTOMER DETAILS:</h3>
         <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Company:</strong> ${company || 'N/A'}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         
         <h3 style="color: #4A3728;">ENQUIRY DETAILS:</h3>
-        <p><strong>Event Type:</strong> ${eventType}</p>
+        <p><strong>Event Type/Purpose:</strong> ${eventType || 'N/A'}</p>
         <p><strong>Quantity:</strong> ${quantity || 'Not specified'}</p>
         <p><strong>Message:</strong> ${message || 'N/A'}</p>
         
@@ -718,6 +947,83 @@ function sendSMSNotification({ phone, name, enquiryId }) {
   }
 }
 
+// ==================== ERROR LOGGING ====================
+function logError(errorType, errorMessage, source, context = '', errorStack = '') {
+  try {
+    const errorId = `err-${uuidv4()}`;
+    const now = new Date().toISOString();
+    
+    console.error(`🔴 [${errorType}] ${errorMessage} | Source: ${source}`);
+    
+    runQuery(
+      `INSERT INTO error_logs (id, errorType, errorMessage, errorStack, source, context, severity, timestamp, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [errorId, errorType, errorMessage, errorStack, source, context, 'error', now, now]
+    );
+    
+    return errorId;
+  } catch (err) {
+    console.error('Failed to log error:', err);
+  }
+}
+
+function sendErrorNotificationToSupport(errorId, errorType, errorMessage, source, context = '') {
+  try {
+    const emailBody = `
+SYSTEM ERROR ALERT
+==================
+Error ID: ${errorId}
+Timestamp: ${new Date().toISOString()}
+
+ERROR DETAILS:
+Type: ${errorType}
+Message: ${errorMessage}
+Source: ${source}
+Context: ${context || 'N/A'}
+
+ACTION REQUIRED:
+Please investigate this error in the admin dashboard and take appropriate action.
+    `;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'support@deepthienterprise.com',
+      to: 'support@deepthienterprise.com',
+      subject: `🚨 System Error Alert - ${errorType}`,
+      text: emailBody,
+      html: `
+        <h2 style="color: #C41E3A;">⚠️  SYSTEM ERROR ALERT</h2>
+        <p><strong>Error ID:</strong> <code>${errorId}</code></p>
+        <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+        
+        <h3 style="color: #4A3728;">ERROR DETAILS:</h3>
+        <p><strong>Type:</strong> ${errorType}</p>
+        <p><strong>Message:</strong> ${errorMessage}</p>
+        <p><strong>Source:</strong> ${source}</p>
+        <p><strong>Context:</strong> ${context || 'N/A'}</p>
+        
+        <h3 style="color: #C41E3A;">ACTION REQUIRED:</h3>
+        <p>Please investigate this error in the admin dashboard and take appropriate action.</p>
+        <p><a href="https://deepthienterprise.com/admin" style="background: #2D5A27; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Admin Dashboard</a></p>
+        
+        <hr style="border: none; border-top: 1px solid #A4C639; margin: 20px 0;">
+        <p style="color: #999; font-size: 12px;">This is an automated error notification from Deepthi Enterprises</p>
+      `
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.warn('⚠️  Error notification email failed:', err.message);
+        console.log('📧 ERROR ALERT EMAIL TO: support@deepthienterprise.com');
+        console.log(emailBody);
+      } else {
+        console.log('✅ Error notification email sent to support@deepthienterprise.com');
+      }
+    });
+  } catch (err) {
+    console.error('Error in sendErrorNotificationToSupport:', err);
+  }
+}
+
 // ==================== HEALTH CHECK ====================
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running', timestamp: new Date().toISOString() });
@@ -726,6 +1032,27 @@ app.get('/api/health', (req, res) => {
 // ==================== SERVE STATIC FRONTEND FILES ====================
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendDistPath));
+
+// ==================== ERROR HANDLING MIDDLEWARE ====================
+// Global error handler for async errors
+app.use((err, req, res, next) => {
+  console.error('❌ API Error:', err.message);
+  console.error('Stack:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Endpoint not found',
+    path: req.path,
+    method: req.method 
+  });
+});
 
 // SPA fallback: Serve index.html for any route not matched by API endpoints
 app.get('*', (req, res) => {
@@ -772,15 +1099,18 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions - stay alive instead of crashing
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
+  console.error('❌ Uncaught Exception:', err.message);
   console.error('Stack trace:', err.stack);
-  process.exit(1);
+  console.log('⚠️  Continuing server operation (uncaught errors are logged)');
+  // Don't exit - let server keep running
 });
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections - stay alive instead of crashing
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  console.error('❌ Unhandled Rejection from:', promise);
+  console.error('Reason:', reason);
+  console.log('⚠️  Continuing server operation (unhandled rejections are logged)');
+  // Don't exit - let server keep running
 });

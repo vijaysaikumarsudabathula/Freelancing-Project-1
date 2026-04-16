@@ -25,77 +25,77 @@ const Contact: React.FC = () => {
   }
 
   return (
-    <section className="py-12 md:py-24 bg-white animate-fade-in">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-20">
+    <section className="py-8 sm:py-12 md:py-24 bg-white animate-fade-in">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-20">
           <div>
-            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-3 md:mb-4 block">Our Location</span>
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 md:mb-8 serif text-[#4A3728]">Deepthi Enterprises</h1>
-            <p className="text-sm md:text-lg text-[#2D5A27] mb-8 md:mb-12 font-medium">
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-2 md:mb-3 block">Our Location</span>
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 md:mb-8 serif text-[#4A3728]">Deepthi Enterprises</h1>
+            <p className="text-xs sm:text-sm md:text-lg text-[#2D5A27] mb-6 sm:mb-8 md:mb-12 font-medium">
               Plot No. 145, Thirumalanagar Colony, Near Dhatunagar, Balapur Mandal, Hyderabad - 500059.
             </p>
             
-            <div className="space-y-6 md:space-y-8">
-              <div className="flex gap-3 md:gap-4">
-                <div className="w-10 md:w-12 h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 md:h-6 w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="space-y-4 sm:space-y-6 md:space-y-8">
+              <div className="flex gap-2 sm:gap-3 md:gap-4">
+                <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm md:text-lg text-[#4A3728]">Proprietor</h4>
-                  <p className="text-[#2D5A27]/70 font-bold serif text-sm md:text-base">K. Latha</p>
+                  <h4 className="font-bold text-xs sm:text-sm md:text-lg text-[#4A3728]">Proprietor</h4>
+                  <p className="text-[#2D5A27]/70 font-bold serif text-xs sm:text-sm md:text-base">K. Latha</p>
                 </div>
               </div>
               
-              <div className="flex gap-3 md:gap-4">
-                <div className="w-10 md:w-12 h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 md:h-6 w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex gap-2 sm:gap-3 md:gap-4">
+                <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm md:text-lg text-[#4A3728]">Contact Numbers</h4>
-                  <p className="text-[#2D5A27]/70 font-bold tracking-wider text-xs md:text-base">+91 8367382095 <br /> +91 9010613584</p>
+                  <h4 className="font-bold text-xs sm:text-sm md:text-lg text-[#4A3728]">Contact Numbers</h4>
+                  <p className="text-[#2D5A27]/70 font-bold tracking-wider text-[8px] sm:text-xs md:text-base">+91 8367382095 <br /> +91 9010613584</p>
                 </div>
               </div>
 
-              <div className="flex gap-3 md:gap-4">
-                <div className="w-10 md:w-12 h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 md:h-6 w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex gap-2 sm:gap-3 md:gap-4">
+                <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-[#FAF9F6] rounded-full flex items-center justify-center text-[#4A3728] flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm md:text-lg text-[#4A3728]">Official Emails</h4>
-                  <p className="text-[#2D5A27]/70 font-medium text-xs md:text-base break-all">support@deepthienterprise.com<br /> vrao_k@zohomail.com</p>
+                  <h4 className="font-bold text-xs sm:text-sm md:text-lg text-[#4A3728]">Official Emails</h4>
+                  <p className="text-[#2D5A27]/70 font-medium text-[8px] sm:text-xs md:text-base break-all">support@deepthienterprise.com<br /> vrao_k@zohomail.com</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-[#FAF9F6] p-6 md:p-10 rounded-2xl md:rounded-[2rem] space-y-4 md:space-y-6 border border-[#4A3728]/5 shadow-sm">
-            <h3 className="text-xl md:text-2xl font-bold serif text-[#4A3728] mb-4 md:mb-6">Send an Inquiry</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          <form onSubmit={handleSubmit} className="bg-[#FAF9F6] p-4 sm:p-6 md:p-10 rounded-2xl md:rounded-[2rem] space-y-3 sm:space-y-4 md:space-y-6 border border-[#4A3728]/5 shadow-sm">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold serif text-[#4A3728] mb-3 sm:mb-4 md:mb-6">Send an Inquiry</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
               <div>
-                <label className="block text-[7px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Name</label>
-                <input required className="w-full p-2 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-sm" placeholder="Your Name" />
+                <label className="block text-[7px] sm:text-[8px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Name</label>
+                <input required className="w-full p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-xs sm:text-sm" placeholder="Your Name" />
               </div>
               <div>
-                <label className="block text-[7px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Phone</label>
-                <input required className="w-full p-2 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-sm" placeholder="Contact No" />
+                <label className="block text-[7px] sm:text-[8px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Phone</label>
+                <input required className="w-full p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-xs sm:text-sm" placeholder="Contact No" />
               </div>
             </div>
             <div>
-              <label className="block text-[7px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Email</label>
-              <input required type="email" className="w-full p-2 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-sm" placeholder="example@email.com" />
+              <label className="block text-[7px] sm:text-[8px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Email</label>
+              <input required type="email" className="w-full p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-xs sm:text-sm" placeholder="example@email.com" />
             </div>
             <div>
-              <label className="block text-[7px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Your Message</label>
-              <textarea required rows={4} className="w-full p-2 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-sm" placeholder="Specify items and quantity needed..."></textarea>
+              <label className="block text-[7px] sm:text-[8px] md:text-xs font-black uppercase text-[#4A3728]/40 mb-2 ml-2 tracking-widest">Your Message</label>
+              <textarea required rows={4} className="w-full p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl border-none outline-none focus:ring-2 focus:ring-[#A4C639] bg-white shadow-sm text-xs sm:text-sm resize-none" placeholder="Specify items and quantity needed..."></textarea>
             </div>
-            <button type="submit" className="w-full btn-leaf py-4 md:py-5 rounded-lg md:rounded-2xl font-black uppercase tracking-[0.3em] shadow-xl text-[8px] md:text-xs active:scale-95 transition-all">
+            <button type="submit" className="w-full btn-leaf py-3 sm:py-4 md:py-5 rounded-lg md:rounded-2xl font-black uppercase tracking-[0.3em] shadow-xl text-[7px] sm:text-[8px] md:text-xs active:scale-95 transition-all">
               Submit Request
             </button>
           </form>

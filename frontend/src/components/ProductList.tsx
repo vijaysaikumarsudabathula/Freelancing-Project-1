@@ -28,25 +28,22 @@ const ProductList: React.FC<ProductListProps> = ({
   isLoading = false,
   lang = 'en'
 }) => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const t = {
     en: {
       bestFromNature: "Purely Sustainable",
-      title1: "Our Collection",
+      title1: "Our Wholesale",
       title2: "No Plastic. 100% Natural.",
       desc: "Discover premium leaf tableware, earthen pottery, and organic forest harvests selected for a caring environment.",
       added: "Added to Cart!",
       addToCart: "Add to Cart",
-      success: "Successfully added to your collection.",
+      success: "Successfully added to your wholesale list.",
       readMore: "Read More",
       readLess: "Read Less",
       prev: "Prev",
@@ -67,15 +64,7 @@ const ProductList: React.FC<ProductListProps> = ({
     }
   }[lang];
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   const handleAddToCart = (product: Product) => {
     setAddingToCartId(product.id);
@@ -98,12 +87,8 @@ const ProductList: React.FC<ProductListProps> = ({
     }));
   };
 
-  const filteredProducts = products.filter(p => {
-    return activeCategory === 'all' || p.category === activeCategory;
-  });
-
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = filteredProducts.slice(
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+  const paginatedProducts = products.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -113,7 +98,7 @@ const ProductList: React.FC<ProductListProps> = ({
     listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const activeCategoryData = categories.find(c => c.id === activeCategory) || categories[0];
+
 
   return (
     <section id="shop" ref={listTopRef} className="py-12 sm:py-20 md:py-32 relative">
@@ -130,8 +115,8 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-3 md:px-4 lg:px-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start mb-8 sm:mb-12 md:mb-24 gap-6 md:gap-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start mb-6 sm:mb-10 md:mb-16 lg:mb-24 gap-4 sm:gap-6 md:gap-8 lg:gap-12">
           <div className="max-w-xl w-full">
             <span className="text-[8px] md:text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.4em] text-[#A4C639] mb-2 sm:mb-3 md:mb-4 block">{t.bestFromNature}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#4A3728] mb-3 sm:mb-4 md:mb-6 serif leading-tight">{t.title1} <br /><span className="italic font-normal">{t.title2}</span></h2>
@@ -140,35 +125,7 @@ const ProductList: React.FC<ProductListProps> = ({
             </p>
           </div>
           
-          <div className="w-full lg:w-auto self-end">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`w-full lg:w-[300px] flex items-center justify-between p-3 md:p-5 rounded-full bg-white border border-[#2D5A27]/10 shadow-sm hover:shadow-md transition-all`}
-              >
-                <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                  <span className="text-base md:text-xl flex-shrink-0">{activeCategoryData.icon}</span>
-                  <span className="font-bold text-[8px] md:text-[10px] uppercase tracking-widest text-[#2D5A27] truncate">{activeCategoryData.label}</span>
-                </div>
-                <span className="text-[8px] md:text-[10px] text-[#2D5A27]/40 flex-shrink-0">▼</span>
-              </button>
 
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 md:mt-3 w-full bg-white rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-[#2D5A27]/5 p-3 md:p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  {categories.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => { setActiveCategory(cat.id); setIsDropdownOpen(false); setCurrentPage(1); }}
-                      className={`w-full flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all text-sm ${activeCategory === cat.id ? 'bg-[#FAF9F6] text-[#2D5A27]' : 'text-[#2D5A27]/60 hover:bg-[#FAF9F6] hover:text-[#2D5A27]'}`}
-                    >
-                      <span className="text-base md:text-lg flex-shrink-0">{cat.icon}</span>
-                      <span className="font-bold text-[8px] md:text-[10px] uppercase tracking-widest">{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {isLoading ? (
@@ -298,14 +255,6 @@ const ProductList: React.FC<ProductListProps> = ({
   );
 };
 
-const categories = [
-  { id: 'all', label: 'All Items', icon: '🌿' },
-  { id: 'plates', label: 'Eco Plates', icon: '🍽️' },
-  { id: 'bowls', label: 'Prasadam Doppalu', icon: '🥣' },
-  { id: 'organic', label: 'Forest Produce', icon: '🍯' },
-  { id: 'earthen', label: 'Earthenware', icon: '🍶' },
-  { id: 'food', label: 'Pulses & Millets', icon: '🌾' },
-  { id: 'oil', label: 'Cold Pressed Oils', icon: '🫒' }
-];
+
 
 export default ProductList;

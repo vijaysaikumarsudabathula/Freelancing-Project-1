@@ -34,6 +34,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ items, onComplete, onCancel
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
   const [amountError, setAmountError] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<OrderDetails>({
     email: '', address: '', city: '', zipCode: '',
     cardName: '', cardNumber: '', expiry: '', cvv: ''
@@ -118,19 +119,128 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ items, onComplete, onCancel
 
   if (step === 'success') {
     return (
-      <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
+      <div className="fixed inset-0 z-[100] bg-white overflow-y-auto flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full text-center py-8 md:py-12">
+          {/* Success Icon */}
           <div className="w-16 md:w-20 h-16 md:h-20 bg-[#A4C639] rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 text-white text-2xl md:text-3xl">✓</div>
-          <h2 className="text-2xl md:text-4xl font-bold serif mb-3 md:mb-4">Payment Successful</h2>
-          <p className="text-xs md:text-sm text-gray-500 mb-6 md:mb-10">Thank you for choosing Vistaraku. Your eco-friendly order is being prepared.</p>
-          <button onClick={() => {
-            // Log the successful transaction with order details
-            const orderId = `ord-${Date.now()}`;
-            const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0) + Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.05) + (items.reduce((sum, item) => sum + item.price * item.quantity, 0) > 1500 ? 0 : 150);
-            logTransaction(orderId, formData.email, total, paymentMethod, 'completed', `Order for ${formData.cardName}`);
-            logActivity(formData.email, 'ORDER_PLACED', `Order placed: ${orderId}`, { orderId, total, paymentMethod, items: items.length });
-            onComplete(formData);
-          }} className="w-full py-3 md:py-5 bg-[#108242] text-white font-bold uppercase tracking-widest text-[7px] md:text-[10px] rounded-lg">Track Order</button>
+          
+          <h2 className="text-2xl md:text-4xl font-bold serif mb-3 md:mb-4">Payment Submitted!</h2>
+          <p className="text-xs md:text-sm text-gray-500 mb-8 md:mb-12">Thank you for choosing Deepthi Enterprises. Your eco-friendly order is almost ready!</p>
+
+          {/* Manual Payment Confirmation Section */}
+          <div className="bg-gradient-to-br from-[#108242]/10 via-[#A4C639]/10 to-transparent rounded-2xl md:rounded-3xl border-2 border-[#108242]/20 p-6 md:p-10 mb-8 md:mb-12">
+            <div className="flex flex-col items-center gap-4 md:gap-6">
+              {/* Phone Icon */}
+              <div className="w-12 md:w-16 h-12 md:h-16 bg-[#108242] rounded-full flex items-center justify-center text-white text-2xl md:text-3xl">
+                📞
+              </div>
+
+              {/* Instructions */}
+              <div className="w-full">
+                <h3 className="text-lg md:text-2xl font-bold serif text-[#108242] mb-2 md:mb-3">Confirm Your Payment</h3>
+                <p className="text-xs md:text-sm text-gray-600 mb-4 md:mb-6 leading-relaxed">
+                  Since your payment is via QR code or manual transfer, please <strong className="text-[#108242]">call our team</strong> to confirm your payment and order.
+                </p>
+
+                {/* Contact Numbers */}
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                    <a 
+                      href="tel:+918367382095"
+                      className="flex-1 bg-white border-2 border-[#108242] p-4 md:p-6 rounded-xl md:rounded-2xl hover:bg-[#108242] hover:text-white transition-all group"
+                    >
+                      <p className="text-[10px] md:text-xs font-black text-[#108242]/60 group-hover:text-white/80 uppercase tracking-wider mb-1 md:mb-2">Call Now</p>
+                      <p className="text-lg md:text-2xl font-bold text-[#108242] group-hover:text-white font-mono">+91 8367382095</p>
+                    </a>
+
+                    <a 
+                      href="tel:+919010613584"
+                      className="flex-1 bg-white border-2 border-[#108242] p-4 md:p-6 rounded-xl md:rounded-2xl hover:bg-[#108242] hover:text-white transition-all group"
+                    >
+                      <p className="text-[10px] md:text-xs font-black text-[#108242]/60 group-hover:text-white/80 uppercase tracking-wider mb-1 md:mb-2">Call Now</p>
+                      <p className="text-lg md:text-2xl font-bold text-[#108242] group-hover:text-white font-mono">+91 9010613584</p>
+                    </a>
+                  </div>
+                </div>
+
+                {/* What to mention */}
+                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-[#108242]/20">
+                  <p className="text-[10px] md:text-xs font-bold text-[#108242] uppercase tracking-widest mb-3 md:mb-4">When you call, mention:</p>
+                  <div className="text-left bg-white p-3 md:p-4 rounded-lg md:rounded-xl border border-[#108242]/10">
+                    <ul className="space-y-2 text-[8px] md:text-xs text-gray-700">
+                      <li className="flex gap-2 items-start">
+                        <span className="text-[#A4C639] font-bold mt-0.5">✓</span>
+                        <span><strong>Order ID:</strong> You'll receive this in email shortly</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-[#A4C639] font-bold mt-0.5">✓</span>
+                        <span><strong>Your Email:</strong> {formData.email}</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-[#A4C639] font-bold mt-0.5">✓</span>
+                        <span><strong>Payment Method:</strong> {paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'bank' ? 'Bank Transfer' : 'Card'}</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-[#A4C639] font-bold mt-0.5">✓</span>
+                        <span><strong>Total Amount:</strong> ₹{total.toLocaleString()}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Process Explanation */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl md:rounded-2xl p-4 md:p-6 mb-8 md:mb-12">
+            <div className="flex gap-3 md:gap-4 items-start">
+              <span className="text-xl md:text-2xl flex-shrink-0">ℹ️</span>
+              <div className="text-left">
+                <p className="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase tracking-wider mb-2">How it works</p>
+                <ol className="text-[8px] md:text-xs text-blue-800 space-y-1.5 md:space-y-2">
+                  <li><strong>1.</strong> Call either of the numbers above</li>
+                  <li><strong>2.</strong> Confirm your payment and order details</li>
+                  <li><strong>3.</strong> Provide your Order ID (from confirmation email)</li>
+                  <li><strong>4.</strong> Our team marks order as confirmed in the system</li>
+                  <li><strong>5.</strong> Your order status changes to "Processing"</li>
+                  <li><strong>6.</strong> You'll receive tracking updates via email & phone</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* Check Email Section */}
+          <div className="bg-[#A4C639]/10 border border-[#A4C639]/30 rounded-xl md:rounded-2xl p-4 md:p-6 mb-8 md:mb-12">
+            <p className="text-[8px] md:text-[10px] font-bold text-[#2D5A27] uppercase tracking-wider mb-2">📧 Check Your Email</p>
+            <p className="text-[8px] md:text-xs text-[#2D5A27]/80">
+              A confirmation email has been sent to <strong>{formData.email}</strong> with your order details and this contact information.
+            </p>
+          </div>
+
+          {/* CTA Button */}
+          <button 
+            onClick={async () => {
+              if (isSubmitting) return;
+              
+              try {
+                setIsSubmitting(true);
+                const orderId = `ord-${Date.now()}`;
+                const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0) + Math.round(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.05) + (items.reduce((sum, item) => sum + item.price * item.quantity, 0) > 1500 ? 0 : 150);
+                await logTransaction(user?.id || '', orderId, total, paymentMethod, 'completed');
+                await logActivity(user?.id || '', 'ORDER_PLACED', `Order placed: ${orderId}`, { orderId, total, paymentMethod, items: items.length });
+                
+                onComplete(formData);
+              } catch (error) {
+                console.error('Error completing order:', error);
+                alert('Error: Please try again or contact support');
+                setIsSubmitting(false);
+              }
+            }} 
+            disabled={isSubmitting}
+            className={`w-full py-3 md:py-5 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#108242] hover:bg-[#0d6233]'} text-white font-bold uppercase tracking-widest text-[7px] md:text-[10px] rounded-lg transition-all`}
+          >
+            {isSubmitting ? '⏳ Processing...' : '✓ Done - Close Checkout'}
+          </button>
         </div>
       </div>
     );
@@ -191,147 +301,257 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ items, onComplete, onCancel
                   {/* Payment Method Selection */}
                   {!configLoading && paymentConfig && (paymentConfig.cardPaymentEnabled || paymentConfig.upiPaymentEnabled || paymentConfig.bankTransferEnabled) && (
                     <>
-                      <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mb-6 md:mb-10">
+                      <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-8 md:mb-12">
                         {paymentConfig.cardPaymentEnabled && (
                           <button 
                             type="button" 
                             onClick={() => { setPaymentMethod('card'); setAmountError(''); }} 
-                            className={`flex-1 py-3 md:py-4 border text-[7px] sm:text-[8px] md:text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${paymentMethod === 'card' ? 'border-[#108242] bg-[#108242]/10 text-[#108242] shadow-md' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                            className={`flex-1 py-4 md:py-5 border-2 text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-xl md:rounded-2xl transition-all transform hover:scale-105 active:scale-95 ${paymentMethod === 'card' ? 'border-[#108242] bg-gradient-to-r from-[#108242] to-[#0d6233] text-white shadow-lg' : 'border-gray-200 text-gray-500 hover:border-[#108242]/50'}`}
                           >
-                            💳 Card
+                            <span className="text-lg md:text-2xl mr-2">💳</span> Card
                           </button>
                         )}
                         {paymentConfig.upiPaymentEnabled && (
                           <button 
                             type="button" 
                             onClick={() => { setPaymentMethod('upi'); setAmountError(''); }} 
-                            className={`flex-1 py-3 md:py-4 border text-[7px] sm:text-[8px] md:text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${paymentMethod === 'upi' ? 'border-[#108242] bg-[#108242]/10 text-[#108242] shadow-md' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                            className={`flex-1 py-4 md:py-5 border-2 text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-xl md:rounded-2xl transition-all transform hover:scale-105 active:scale-95 ${paymentMethod === 'upi' ? 'border-[#108242] bg-gradient-to-r from-[#108242] to-[#0d6233] text-white shadow-lg' : 'border-gray-200 text-gray-500 hover:border-[#108242]/50'}`}
                           >
-                            📱 UPI
+                            <span className="text-lg md:text-2xl mr-2">📱</span> UPI
                           </button>
                         )}
                         {paymentConfig.bankTransferEnabled && (
                           <button 
                             type="button" 
                             onClick={() => { setPaymentMethod('bank'); setAmountError(''); }} 
-                            className={`flex-1 py-3 md:py-4 border text-[7px] sm:text-[8px] md:text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${paymentMethod === 'bank' ? 'border-[#108242] bg-[#108242]/10 text-[#108242] shadow-md' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                            className={`flex-1 py-4 md:py-5 border-2 text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-xl md:rounded-2xl transition-all transform hover:scale-105 active:scale-95 ${paymentMethod === 'bank' ? 'border-[#2D5A27] bg-gradient-to-r from-[#2D5A27] to-[#1f3a1a] text-white shadow-lg' : 'border-gray-200 text-gray-500 hover:border-[#2D5A27]/50'}`}
                           >
-                            🏦 Bank
+                            <span className="text-lg md:text-2xl mr-2">🏦</span> Bank
                           </button>
                         )}
                       </div>
 
                       {/* UPI Payment Method */}
                       {paymentMethod === 'upi' && paymentConfig.upiPaymentEnabled && (
-                        <div className="mb-6 md:mb-10 p-4 md:p-8 bg-[#FAF9F6] rounded-lg border border-gray-100">
-                          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-[#108242] mb-3 md:mb-4">📱 UPI Payment Details</p>
-                          
-                          {paymentConfig.upiQrCode ? (
-                            <div className="text-center space-y-4 md:space-y-6">
-                              <div>
-                                <img 
-                                  src={paymentConfig.upiQrCode} 
-                                  alt="UPI QR Code" 
-                                  className="w-32 sm:w-40 md:w-48 h-32 sm:h-40 md:h-48 mx-auto border-2 border-white rounded-lg shadow-lg"
-                                />
+                        <div className="mb-6 md:mb-10 bg-gradient-to-br from-[#108242]/5 via-[#A4C639]/5 to-transparent rounded-xl md:rounded-3xl border-2 border-[#108242]/20 overflow-hidden">
+                          <div className="p-6 md:p-12">
+                            <div className="flex flex-col items-center space-y-6 md:space-y-8">
+                              {/* Header */}
+                              <div className="text-center">
+                                <div className="inline-flex items-center justify-center w-12 md:w-16 h-12 md:h-16 bg-gradient-to-br from-[#108242] to-[#0d6233] rounded-full mb-3 md:mb-4">
+                                  <span className="text-2xl md:text-4xl">📱</span>
+                                </div>
+                                <h3 className="text-lg md:text-2xl font-bold text-[#108242] mb-2">Quick UPI Payment</h3>
+                                <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest">Fast, Secure & Instant</p>
                               </div>
-                              <div>
-                                <p className="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">UPI ID:</p>
-                                <p className="font-bold text-[#108242] text-sm md:text-lg break-all">{paymentConfig.upiId}</p>
-                              </div>
-                              <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
-                                <p className="text-[7px] md:text-xs text-gray-500 mb-1 md:mb-2">Scan with:</p>
-                                <p className="text-[8px] md:text-[10px] font-semibold text-gray-700">Google Pay • PhonePe • Paytm • BHIM</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center py-6 md:py-8 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                              <p className="text-gray-400 text-xs md:text-sm">QR Code not configured</p>
-                              <p className="text-[8px] md:text-[10px] text-gray-400 mt-2">Ask administrator to upload QR code</p>
-                            </div>
-                          )}
 
-                          {paymentConfig.paymentDescription && (
-                            <p className="text-[7px] md:text-xs text-gray-600 mt-4 md:mt-6 p-2 md:p-3 bg-blue-50 rounded border border-blue-100">
-                              ℹ️ {paymentConfig.paymentDescription}
-                            </p>
-                          )}
+                              {/* QR Code Section */}
+                              {paymentConfig.upiQrCode ? (
+                                <div className="w-full max-w-sm">
+                                  <div className="relative bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-xl border-4 border-[#108242]/10">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#A4C639]/10 to-transparent rounded-2xl md:rounded-3xl pointer-events-none"></div>
+                                    <div className="relative flex items-center justify-center">
+                                      <img 
+                                        src={paymentConfig.upiQrCode} 
+                                        alt="UPI QR Code" 
+                                        className="w-48 md:w-64 h-48 md:h-64 object-contain drop-shadow-lg rounded-lg"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="mt-4 md:mt-6 text-center">
+                                    <p className="text-[7px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Scan to Pay</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-full max-w-sm">
+                                  <div className="text-center py-8 md:py-12 bg-white rounded-2xl md:rounded-3xl border-2 border-dashed border-gray-300">
+                                    <p className="text-gray-400 text-sm md:text-base font-semibold">⚠️ QR Code not configured</p>
+                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-2">Contact administrator to upload</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* UPI ID Section */}
+                              {paymentConfig.upiId && (
+                                <div className="w-full max-w-sm">
+                                  <div className="bg-gradient-to-r from-[#108242] to-[#0d6233] rounded-2xl md:rounded-3xl p-4 md:p-6 text-white text-center">
+                                    <p className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-[#A4C639] mb-2 md:mb-3">UPI ID</p>
+                                    <p className="text-base md:text-2xl font-bold break-all font-mono">{paymentConfig.upiId}</p>
+                                    <p className="text-[7px] md:text-[9px] text-[#A4C639]/80 mt-2 md:mt-3">Manually enter if needed</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Payment Apps */}
+                              <div className="w-full">
+                                <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-gray-100">
+                                  <p className="text-[7px] md:text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-3 md:mb-4">Accepted on</p>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                    {[
+                                      { icon: '🏦', name: 'Google Pay' },
+                                      { icon: '💳', name: 'PhonePe' },
+                                      { icon: '🎧', name: 'Paytm' },
+                                      { icon: '📱', name: 'BHIM' }
+                                    ].map((app) => (
+                                      <div key={app.name} className="flex flex-col items-center">
+                                        <div className="w-10 md:w-14 h-10 md:h-14 bg-gradient-to-br from-[#A4C639]/20 to-[#108242]/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2">
+                                          <span className="text-lg md:text-2xl">{app.icon}</span>
+                                        </div>
+                                        <p className="text-[7px] md:text-[9px] font-bold text-gray-600 text-center">{app.name}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Info Banner */}
+                              <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-xl md:rounded-2xl p-3 md:p-4">
+                                <div className="flex gap-2 md:gap-3">
+                                  <span className="text-lg md:text-xl flex-shrink-0 mt-0.5">✅</span>
+                                  <div>
+                                    <p className="text-[7px] md:text-[9px] font-bold text-blue-900 uppercase tracking-wider mb-1">Secure Payment</p>
+                                    <p className="text-[7px] md:text-[9px] text-blue-800">Your payment is protected with bank-level encryption</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
 
                       {/* Card Payment Method */}
                       {paymentMethod === 'card' && paymentConfig.cardPaymentEnabled && (
-                        <div className="space-y-3 md:space-y-6 mb-6 md:mb-10">
-                          <div>
-                            <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Card Number</label>
-                            <input required name="cardNumber" className="w-full p-3 md:p-4 border border-gray-200 bg-[#FAF9F6] text-xs md:text-sm outline-none focus:border-[#108242] focus:bg-white rounded-lg" placeholder="1234 5678 9012 3456" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-3 md:gap-6">
-                            <div>
-                              <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Expiry</label>
-                              <input required name="expiry" className="w-full p-3 md:p-4 border border-gray-200 bg-[#FAF9F6] text-xs md:text-sm outline-none focus:border-[#108242] focus:bg-white rounded-lg" placeholder="MM / YY" />
-                            </div>
-                            <div>
-                              <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">CVV</label>
-                              <input required name="cvv" className="w-full p-3 md:p-4 border border-gray-200 bg-[#FAF9F6] text-xs md:text-sm outline-none focus:border-[#108242] focus:bg-white rounded-lg" placeholder="123" />
-                            </div>
-                          </div>
+                        <div className="mb-6 md:mb-10 bg-gradient-to-br from-[#108242]/5 via-[#FAF9F6] to-transparent rounded-xl md:rounded-3xl border-2 border-gray-100 overflow-hidden">
+                          <div className="p-6 md:p-12">
+                            <div className="space-y-6 md:space-y-8">
+                              {/* Header */}
+                              <div>
+                                <div className="inline-flex items-center justify-center w-10 md:w-14 h-10 md:h-14 bg-gradient-to-br from-[#108242] to-[#0d6233] rounded-xl md:rounded-2xl mb-3 md:mb-4">
+                                  <span className="text-xl md:text-3xl">💳</span>
+                                </div>
+                                <h3 className="text-lg md:text-2xl font-bold text-[#108242] mb-1">Card Details</h3>
+                                <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest">All payments are encrypted & secure</p>
+                              </div>
 
-                          {paymentConfig.paymentDescription && (
-                            <p className="text-[7px] md:text-xs text-gray-600 p-2 md:p-3 bg-blue-50 rounded border border-blue-100">
-                              ℹ️ {paymentConfig.paymentDescription}
-                            </p>
-                          )}
+                              {/* Card Input */}
+                              <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 border-2 border-gray-100 hover:border-[#108242]/30 transition-all">
+                                <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 md:mb-4">Card Number</label>
+                                <input required name="cardNumber" className="w-full p-4 md:p-5 border-2 border-gray-200 bg-white text-lg md:text-xl font-mono outline-none focus:border-[#108242] focus:ring-2 focus:ring-[#108242]/20 rounded-xl md:rounded-2xl transition-all" placeholder="1234 5678 9012 3456" />
+                              </div>
+
+                              {/* Expiry & CVV */}
+                              <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 border-2 border-gray-100 hover:border-[#108242]/30 transition-all">
+                                  <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 md:mb-4">Expiry Date</label>
+                                  <input required name="expiry" className="w-full p-4 md:p-5 border-2 border-gray-200 bg-white text-base md:text-lg font-bold outline-none focus:border-[#108242] focus:ring-2 focus:ring-[#108242]/20 rounded-xl md:rounded-2xl transition-all" placeholder="MM / YY" />
+                                </div>
+                                <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 border-2 border-gray-100 hover:border-[#108242]/30 transition-all">
+                                  <label className="block text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 md:mb-4">CVV</label>
+                                  <input required name="cvv" className="w-full p-4 md:p-5 border-2 border-gray-200 bg-white text-lg md:text-xl font-bold outline-none focus:border-[#108242] focus:ring-2 focus:ring-[#108242]/20 rounded-xl md:rounded-2xl transition-all text-center" placeholder="123" />
+                                </div>
+                              </div>
+
+                              {/* Security Info */}
+                              <div className="bg-green-50 border-2 border-green-200 rounded-xl md:rounded-2xl p-3 md:p-4 flex gap-2 md:gap-3">
+                                <span className="text-lg md:text-2xl flex-shrink-0">🔒</span>
+                                <div>
+                                  <p className="text-[7px] md:text-[9px] font-bold text-green-900 uppercase tracking-wider mb-1">PCI Compliant</p>
+                                  <p className="text-[7px] md:text-[9px] text-green-800">Your card data is never stored on our servers</p>
+                                </div>
+                              </div>
+
+                              {paymentConfig.paymentDescription && (
+                                <p className="text-[7px] md:text-[9px] text-gray-600 p-3 md:p-4 bg-blue-50 rounded-lg md:rounded-xl border border-blue-100">
+                                  ℹ️ {paymentConfig.paymentDescription}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
 
                       {/* Bank Transfer Payment Method */}
                       {paymentMethod === 'bank' && paymentConfig.bankTransferEnabled && (
-                        <div className="mb-6 md:mb-10 p-4 md:p-8 bg-[#FAF9F6] rounded-lg border border-gray-100">
-                          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-[#108242] mb-4 md:mb-6">🏦 Bank Transfer Details</p>
-                          
-                          {paymentConfig.bankAccountName && paymentConfig.bankAccountNumber ? (
-                            <div className="space-y-2 md:space-y-4 bg-white p-4 md:p-6 rounded-lg border border-gray-200">
-                              <div className="flex justify-between items-center pb-2 md:pb-3 border-b text-xs md:text-sm">
-                                <span className="text-[7px] md:text-[10px] font-bold text-gray-500 uppercase">Account Holder</span>
-                                <span className="font-semibold text-gray-900">{paymentConfig.bankAccountName}</span>
+                        <div className="mb-6 md:mb-10 bg-gradient-to-br from-[#2D5A27]/5 via-[#FAF9F6] to-transparent rounded-xl md:rounded-3xl border-2 border-[#2D5A27]/10 overflow-hidden">
+                          <div className="p-6 md:p-12">
+                            <div className="space-y-6 md:space-y-8">
+                              {/* Header */}
+                              <div>
+                                <div className="inline-flex items-center justify-center w-10 md:w-14 h-10 md:h-14 bg-gradient-to-br from-[#2D5A27] to-[#1f3a1a] rounded-xl md:rounded-2xl mb-3 md:mb-4">
+                                  <span className="text-xl md:text-3xl">🏦</span>
+                                </div>
+                                <h3 className="text-lg md:text-2xl font-bold text-[#2D5A27] mb-1">Bank Transfer</h3>
+                                <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest">Direct account transfer</p>
                               </div>
-                              <div className="flex justify-between items-center pb-2 md:pb-3 border-b text-xs md:text-sm">
-                                <span className="text-[7px] md:text-[10px] font-bold text-gray-500 uppercase">Bank Name</span>
-                                <span className="font-semibold text-gray-900">{paymentConfig.bankName}</span>
-                              </div>
-                              <div className="flex justify-between items-center pb-2 md:pb-3 border-b text-xs md:text-sm">
-                                <span className="text-[7px] md:text-[10px] font-bold text-gray-500 uppercase">Account Number</span>
-                                <span className="font-mono font-semibold text-gray-900 text-xs md:text-sm">{paymentConfig.bankAccountNumber}</span>
-                              </div>
-                              <div className="flex justify-between items-center pb-2 md:pb-3 border-b text-xs md:text-sm">
-                                <span className="text-[7px] md:text-[10px] font-bold text-gray-500 uppercase">IFSC Code</span>
-                                <span className="font-mono font-semibold text-gray-900 text-xs md:text-sm">{paymentConfig.bankIFSC}</span>
-                              </div>
-                              {paymentConfig.bankBranch && (
-                                <div className="flex justify-between items-center text-xs md:text-sm">
-                                  <span className="text-[7px] md:text-[10px] font-bold text-gray-500 uppercase">Branch</span>
-                                  <span className="font-semibold text-gray-900">{paymentConfig.bankBranch}</span>
+
+                              {/* Bank Details Display */}
+                              {paymentConfig.bankAccountName && paymentConfig.bankAccountNumber ? (
+                                <div className="space-y-4 md:space-y-6">
+                                  {/* Main Card */}
+                                  <div className="bg-gradient-to-br from-[#2D5A27] to-[#1f3a1a] rounded-2xl md:rounded-3xl p-6 md:p-8 text-white shadow-xl border-2 border-[#A4C639]/30">
+                                    <p className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-[#A4C639] mb-4 md:mb-6 opacity-90">Account Details</p>
+                                    
+                                    <div className="space-y-4 md:space-y-6">
+                                      <div className="pb-4 md:pb-6 border-b border-[#A4C639]/30">
+                                        <p className="text-[7px] md:text-[9px] font-bold text-[#A4C639]/80 uppercase tracking-wider mb-1 md:mb-2">Account Holder</p>
+                                        <p className="text-base md:text-xl font-bold">{paymentConfig.bankAccountName}</p>
+                                      </div>
+                                      
+                                      <div className="pb-4 md:pb-6 border-b border-[#A4C639]/30">
+                                        <p className="text-[7px] md:text-[9px] font-bold text-[#A4C639]/80 uppercase tracking-wider mb-1 md:mb-2">Bank Name</p>
+                                        <p className="text-base md:text-lg font-semibold">{paymentConfig.bankName || 'Not Set'}</p>
+                                      </div>
+                                      
+                                      <div className="pb-4 md:pb-6 border-b border-[#A4C639]/30">
+                                        <p className="text-[7px] md:text-[9px] font-bold text-[#A4C639]/80 uppercase tracking-wider mb-1 md:mb-2">Account Number</p>
+                                        <p className="text-sm md:text-lg font-mono font-bold tracking-widest">{paymentConfig.bankAccountNumber}</p>
+                                      </div>
+                                      
+                                      <div className="pb-4 md:pb-6 border-b border-[#A4C639]/30">
+                                        <p className="text-[7px] md:text-[9px] font-bold text-[#A4C639]/80 uppercase tracking-wider mb-1 md:mb-2">IFSC Code</p>
+                                        <p className="text-sm md:text-lg font-mono font-bold">{paymentConfig.bankIFSC || 'Not Set'}</p>
+                                      </div>
+                                      
+                                      {paymentConfig.bankBranch && (
+                                        <div>
+                                          <p className="text-[7px] md:text-[9px] font-bold text-[#A4C639]/80 uppercase tracking-wider mb-1 md:mb-2">Branch</p>
+                                          <p className="text-base md:text-lg font-semibold">{paymentConfig.bankBranch}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Important Notice */}
+                                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl md:rounded-2xl p-4 md:p-6">
+                                    <div className="flex gap-3 md:gap-4">
+                                      <span className="text-2xl md:text-3xl flex-shrink-0">⚠️</span>
+                                      <div>
+                                        <p className="text-[8px] md:text-[10px] font-bold text-yellow-900 uppercase tracking-wider mb-2 md:mb-3">Before Transferring</p>
+                                        <ul className="text-[7px] md:text-[9px] text-yellow-800 space-y-1 md:space-y-2">
+                                          <li>✓ Transfer exact amount shown</li>
+                                          <li>✓ Include Order ID in payment reference</li>
+                                          <li>✓ Mark payment as complete once transferred</li>
+                                          <li>✓ Allow 1-2 hours for confirmation</li>
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Additional Info */}
+                                  {paymentConfig.paymentDescription && (
+                                    <p className="text-[7px] md:text-[9px] text-gray-600 p-3 md:p-4 bg-blue-50 rounded-lg md:rounded-xl border border-blue-100">
+                                      ℹ️ {paymentConfig.paymentDescription}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8 md:py-12 bg-white rounded-2xl md:rounded-3xl border-2 border-dashed border-gray-300">
+                                  <p className="text-gray-400 text-sm md:text-base font-semibold">⚠️ Bank details not configured</p>
+                                  <p className="text-[8px] md:text-[10px] text-gray-400 mt-2">Contact administrator to configure</p>
                                 </div>
                               )}
                             </div>
-                          ) : (
-                            <div className="text-center py-6 md:py-8 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                              <p className="text-gray-400 text-xs md:text-sm">Bank details not configured</p>
-                              <p className="text-[7px] md:text-[10px] text-gray-400 mt-2">Ask administrator to configure bank details</p>
-                            </div>
-                          )}
-
-                          <div className="mt-4 md:mt-6 p-3 md:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p className="text-[7px] md:text-[10px] font-bold text-yellow-800 uppercase mb-1 md:mb-2">⚠️ Important</p>
-                            <p className="text-[7px] md:text-xs text-yellow-800">Please transfer exact amount and include Order ID in payment reference. Mark as complete once transferred.</p>
                           </div>
-
-                          {paymentConfig.paymentDescription && (
-                            <p className="text-[7px] md:text-xs text-gray-600 mt-4 md:mt-4 p-2 md:p-3 bg-blue-50 rounded border border-blue-100">
-                              ℹ️ {paymentConfig.paymentDescription}
-                            </p>
-                          )}
                         </div>
                       )}
 

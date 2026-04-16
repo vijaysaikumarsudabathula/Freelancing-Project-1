@@ -55,21 +55,21 @@ const About: React.FC<AboutProps> = ({ onReadMore, lang = 'en' }) => {
 
   return (
     <div className="animate-fade-in">
-      <section className="relative py-32 bg-[#F9F8F3] overflow-hidden">
+      <section className="relative py-16 sm:py-24 md:py-32 bg-[#F9F8F3] overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover" alt="" />
         </div>
-        <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-4 block">Our Identity</span>
-          <h1 className="text-7xl font-bold serif mb-8 text-[#4A3728]">Deepthi Enterprises <br /><span className="italic font-normal">Caring Environment.</span></h1>
-          <p className="text-xl text-[#2D5A27] max-w-2xl mx-auto italic leading-relaxed font-bold">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 text-center relative z-10">
+          <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] text-[#A4C639] mb-2 sm:mb-3 md:mb-4 block">Our Identity</span>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold serif mb-4 sm:mb-6 md:mb-8 text-[#4A3728]">Deepthi Enterprises <br /><span className="italic font-normal">Caring Environment.</span></h1>
+          <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#2D5A27] max-w-2xl mx-auto italic leading-relaxed font-bold">
             "Eco-friendly Products – No Plastic"
           </p>
         </div>
       </section>
 
-      <section className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-20 items-center">
+      <section className="py-12 sm:py-20 md:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 flex flex-col lg:flex-row gap-8 md:gap-12 lg:gap-20 items-center">
           <div className="flex-1 space-y-10">
             <h2 className="text-5xl font-bold serif text-[#2D5A27]">Our Mission</h2>
             <div className="space-y-6">

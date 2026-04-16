@@ -27,7 +27,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onDeleteProduct,
   lang = 'en'
 }) => {
-  const [tab, setTab] = useState<'orders' | 'inventory' | 'payments' | 'users' | 'bulk-requests'>('orders');
+  const [tab, setTab] = useState<'orders' | 'inventory' | 'payments' | 'users' | 'bulk-requests' | 'error-logs' | 'translations'>('orders');
   const [isAdding, setIsAdding] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -36,7 +36,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showPaymentSettings, setShowPaymentSettings] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '', name_te: '', price: '0', category: 'plates' as Product['category'],
+    name: '', name_te: '', price: '0', unit: 'per piece',
     description: '', description_te: '', imagePrompt: '', imageUrl: ''
   });
   const [usersList, setUsersList] = useState<User[]>([]);
@@ -57,21 +57,41 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
   const [loginsLoading, setLoginsLoading] = useState(false);
 
+  const [errorLogs, setErrorLogs] = useState<any[]>([]);
+  const [errorLogsLoading, setErrorLogsLoading] = useState(false);
+  const [unresolvedErrorCount, setUnresolvedErrorCount] = useState(0);
+
+  const [translations, setTranslations] = useState<any[]>([]);
+  const [translationsLoading, setTranslationsLoading] = useState(false);
+  const [editingTranslationId, setEditingTranslationId] = useState<string | null>(null);
+  const [editingTranslationData, setEditingTranslationData] = useState({ textEn: '', textTe: '' });
+  const [selectedTranslationModule, setSelectedTranslationModule] = useState<string>('all');
+  const [translationModules, setTranslationModules] = useState<string[]>([]);
+
+  // Refresh users list function
+  const refreshUsersList = async () => {
+    try {
+      setUsersLoading(true);
+      const users = await getUsersAsync();
+      setUsersList(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   // Load users from API on component mount
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setUsersLoading(true);
-        const users = await getUsersAsync();
-        setUsersList(users);
-      } catch (error) {
-        console.error('Error loading users:', error);
-      } finally {
-        setUsersLoading(false);
-      }
-    };
-    loadUsers();
+    refreshUsersList();
   }, []);
+
+  // Reload users when the users tab is selected
+  useEffect(() => {
+    if (tab === 'users') {
+      refreshUsersList();
+    }
+  }, [tab]);
 
   // Load bulk requests when tab changes to bulk-requests
   useEffect(() => {
@@ -143,13 +163,69 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   }, [tab]);
 
+  // Load error logs when error-logs tab is opened
+  useEffect(() => {
+    if (tab === 'error-logs') {
+      const fetchErrorLogs = async () => {
+        try {
+          setErrorLogsLoading(true);
+          const [logsRes, countRes] = await Promise.all([
+            fetch('/api/error-logs'),
+            fetch('/api/error-logs/count/unresolved')
+          ]);
+          if (logsRes.ok) {
+            const data = await logsRes.json();
+            setErrorLogs(data);
+          }
+          if (countRes.ok) {
+            const countData = await countRes.json();
+            setUnresolvedErrorCount(countData.unresolvedCount || 0);
+          }
+        } catch (error) {
+          console.error('Error fetching error logs:', error);
+        } finally {
+          setErrorLogsLoading(false);
+        }
+      };
+      fetchErrorLogs();
+    }
+  }, [tab]);
+
+  // Load translations when translations tab is opened
+  useEffect(() => {
+    if (tab === 'translations') {
+      const fetchTranslations = async () => {
+        try {
+          setTranslationsLoading(true);
+          const [transRes, modulesRes] = await Promise.all([
+            fetch('/api/translations'),
+            fetch('/api/translations/modules/list')
+          ]);
+          if (transRes.ok) {
+            const data = await transRes.json();
+            setTranslations(data);
+          }
+          if (modulesRes.ok) {
+            const modules = await modulesRes.json();
+            setTranslationModules(modules || []);
+          }
+        } catch (error) {
+          console.error('Error fetching translations:', error);
+        } finally {
+          setTranslationsLoading(false);
+        }
+      };
+      fetchTranslations();
+    }
+  }, [tab]);
+
   const users = usersList;
   const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + o.total, 0), [orders]);
 
   const closeModals = () => {
     setIsAdding(false);
     setEditingProductId(null);
-    setFormData({ name: '', name_te: '', price: '0', category: 'plates', description: '', description_te: '', imagePrompt: '', imageUrl: '' });
+    setFormData({ name: '', name_te: '', price: '0', unit: 'per piece', description: '', description_te: '', imagePrompt: '', imageUrl: '' });
   };
 
   const handleMagicPrompt = async () => {
@@ -171,7 +247,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setIsGenerating(false);
   };
 
-  const handleSubmitProduct = (e: React.FormEvent) => {
+  const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
     let finalImage = formData.imageUrl;
@@ -185,16 +261,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       name: formData.name,
       name_te: formData.name_te,
       price: Number(formData.price),
-      category: formData.category,
+      unit: formData.unit,
       description: formData.description,
       description_te: formData.description_te,
       image: finalImage || '/images/deepthi-logo.png',
       benefits: ['100% Biodegradable', 'Handcrafted', 'Eco-safe']
     };
 
-    if (editingProductId) onUpdateProduct(productData);
-    else onAddProduct(productData);
-    closeModals();
+    try {
+      if (editingProductId) {
+        await onUpdateProduct(productData);
+      } else {
+        await onAddProduct(productData);
+      }
+      closeModals();
+    } catch (error) {
+      console.error('Product submission error:', error);
+      // Modal stays open so user can see error message or retry
+    }
   };
 
   const refreshUsers = async () => {
@@ -231,13 +315,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold serif text-[#4A3728]">Admin Control Center</h1>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 md:gap-3 bg-white p-1 md:p-1.5 rounded-lg md:rounded-2xl border border-[#2D5A27]/10 shadow-sm overflow-x-auto">
-            {['orders', 'inventory', 'payments', 'users', 'bulk-requests'].map((t) => (
+            {['orders', 'inventory', 'payments', 'users', 'bulk-requests', 'error-logs', 'translations'].map((t) => (
               <button 
                 key={t}
                 onClick={() => setTab(t as any)} 
                 className={`px-2 sm:px-4 md:px-6 py-1.5 md:py-3 rounded-lg md:rounded-xl text-[6px] sm:text-[8px] md:text-[9px] lg:text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${tab === t ? 'bg-[#2D5A27] text-white shadow-md' : 'text-[#2D5A27]/40 hover:text-[#2D5A27]'}`}
               >
-                {t === 'bulk-requests' ? '📋 Bulk' : t}
+                {t === 'bulk-requests' ? '📋 Bulk' : t === 'error-logs' ? '🔴 Errors' : t === 'translations' ? '🌐 Translations' : t}
               </button>
             ))}
             <button onClick={() => setShowPaymentSettings(true)} className="ml-1 sm:ml-2 md:ml-4 px-1.5 sm:px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[6px] sm:text-[7px] md:text-[9px] font-bold uppercase tracking-widest bg-[#A4C639]/10 border border-[#A4C639]/30 text-[#2D5A27] hover:bg-[#A4C639]/20 transition-all whitespace-nowrap flex-shrink-0">💳 Setup</button>
@@ -247,15 +331,56 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </header>
 
         {tab === 'orders' && (
-          <div className="space-y-4 md:space-y-6 lg:space-y-8 animate-fade-in">
+          <div className="animate-fade-in space-y-4 md:space-y-6 lg:space-y-8">
+            {/* Pending Payment Confirmation Section */}
+            {orders.filter(o => o.status === 'pending').length > 0 && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
+                  <div className="flex gap-3 md:gap-4 items-start flex-1">
+                    <div className="text-2xl md:text-3xl flex-shrink-0 pt-1">📞</div>
+                    <div className="flex-1">
+                      <h3 className="text-sm md:text-lg font-bold text-yellow-900 mb-1">Payment Confirmations Needed</h3>
+                      <p className="text-xs md:text-sm text-yellow-800 mb-2">
+                        <strong>{orders.filter(o => o.status === 'pending').length} order(s)</strong> awaiting payment confirmation via phone call.
+                      </p>
+                      <p className="text-[10px] md:text-xs text-yellow-700">
+                        💡 <strong>Process:</strong> Customers call +91 8367382095 or +91 9010613584 → Verify payment → Update status to "Processing" below
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 text-2xl md:text-3xl flex-shrink-0">
+                    <span>⏳</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Orders List */}
             {orders.map(order => (
-              <div key={order.id} className="bg-white p-3 sm:p-4 md:p-6 lg:p-10 rounded-lg sm:rounded-xl md:rounded-[3rem] border border-[#2D5A27]/5 shadow-sm hover:shadow-2xl transition-all">
+              <div 
+                key={order.id} 
+                className={`rounded-lg sm:rounded-xl md:rounded-[3rem] border shadow-sm hover:shadow-2xl transition-all p-3 sm:p-4 md:p-6 lg:p-10 ${
+                  order.status === 'pending' 
+                    ? 'bg-yellow-50 border-yellow-300' 
+                    : 'bg-white border-[#2D5A27]/5'
+                }`}
+              >
                 <div className="flex flex-col lg:flex-row justify-between gap-4 sm:gap-6 md:gap-12">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
                       <span className="bg-[#A4C639]/10 text-[#2D5A27] text-[7px] sm:text-[8px] md:text-[10px] font-black px-2 sm:px-3 md:px-5 py-0.5 md:py-2 rounded-lg md:rounded-xl whitespace-nowrap">ORD: #{order.id.slice(-8)}</span>
                       <span className="text-[7px] sm:text-[8px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest whitespace-nowrap">{order.date}</span>
-                      <span className={`text-[6px] sm:text-[7px] md:text-[8px] font-black uppercase tracking-widest px-2 md:px-3 py-0.5 md:py-1 rounded-md ${order.status === 'delivered' ? 'bg-[#A4C639]' : 'bg-[#2D5A27]'} text-white whitespace-nowrap`}>{order.status}</span>
+                      <span className={`text-[6px] sm:text-[7px] md:text-[8px] font-black uppercase tracking-widest px-2 md:px-3 py-0.5 md:py-1 rounded-md text-white whitespace-nowrap ${
+                        order.status === 'pending' ? 'bg-yellow-600 animate-pulse' : 
+                        order.status === 'delivered' ? 'bg-[#A4C639]' : 'bg-[#2D5A27]'
+                      }`}>
+                        {order.status === 'pending' ? '⏳ ' : ''}{order.status}
+                      </span>
+                      {order.status === 'pending' && (
+                        <span className="text-[6px] sm:text-[7px] md:text-[8px] font-black uppercase tracking-widest px-2 md:px-3 py-0.5 md:py-1 rounded-md bg-red-100 text-red-700 whitespace-nowrap">
+                          ⚠️ Awaiting Payment Confirmation
+                        </span>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-10 mb-4 sm:mb-6 md:mb-10">
@@ -292,15 +417,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="lg:w-72 flex flex-col gap-1 md:gap-2 border-t lg:border-t-0 lg:border-l border-gray-100 pt-4 lg:pt-0 lg:pl-8">
+                  <div className="lg:w-72 flex flex-col gap-1 md:gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-4 lg:pt-0 lg:pl-8">
+                    {order.status === 'pending' && (
+                      <div className="mb-3 md:mb-4 p-2 md:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-[7px] md:text-[9px] font-bold text-blue-900 uppercase tracking-wider">Payment Verification</p>
+                        <p className="text-[7px] md:text-[8px] text-blue-800 mt-1">Call customer to confirm payment received, then mark as "Processing"</p>
+                      </div>
+                    )}
                     <p className="text-[6px] sm:text-[7px] md:text-[9px] font-black text-[#2D5A27]/30 uppercase tracking-widest mb-2 md:mb-3 whitespace-nowrap">Set Status</p>
                     {(['pending', 'processing', 'shipped', 'out-for-delivery', 'delivered', 'cancelled'] as OrderStatus[]).map(s => (
                       <button 
                         key={s} 
                         onClick={() => onUpdateOrderStatus(order.id, s, orderTrackingInput[order.id])}
-                        className={`w-full py-1.5 md:py-3 lg:py-4 rounded-lg md:rounded-2xl text-[6px] sm:text-[7px] md:text-[9px] font-black uppercase tracking-widest transition-all border text-center ${order.status === s ? 'bg-[#2D5A27] text-white border-[#2D5A27] shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:border-[#2D5A27]/20'}`}
+                        className={`w-full py-1.5 md:py-3 lg:py-4 rounded-lg md:rounded-2xl text-[6px] sm:text-[7px] md:text-[9px] font-black uppercase tracking-widest transition-all border text-center ${
+                          order.status === s 
+                            ? order.status === 'pending' 
+                              ? 'bg-yellow-600 text-white border-yellow-700 shadow-lg animate-pulse' 
+                              : 'bg-[#2D5A27] text-white border-[#2D5A27] shadow-lg' 
+                            : order.status === 'pending' && s === 'processing'
+                            ? 'bg-green-100 border-green-400 text-green-900 font-black hover:bg-green-200 hover:border-green-500'
+                            : 'bg-white border-gray-100 text-gray-400 hover:border-[#2D5A27]/20'
+                        }`}
                       >
-                        {s.replace(/-/g, ' ')}
+                        {s === 'processing' && order.status === 'pending' ? '✓ ' : ''}{s.replace(/-/g, ' ')}
                       </button>
                     ))}
                   </div>
@@ -444,7 +583,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="animate-fade-in space-y-6 md:space-y-8">
             <div className="flex justify-between items-center flex-wrap gap-3">
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#4A3728]">Registered Users</h2>
-              <span className="px-3 md:px-4 py-1 md:py-2 bg-[#A4C639] text-[#2D5A27] rounded-lg font-bold text-xs md:text-sm">{users.length} users</span>
+              <div className="flex gap-2 items-center">
+                <button 
+                  onClick={refreshUsersList} 
+                  disabled={usersLoading}
+                  className="px-3 md:px-4 py-1 md:py-2 bg-[#108242] text-white rounded-lg font-bold text-xs md:text-sm hover:bg-[#0d6233] disabled:opacity-50 transition-all"
+                >
+                  {usersLoading ? '⏳ Loading...' : '🔄 Refresh'}
+                </button>
+                <span className="px-3 md:px-4 py-1 md:py-2 bg-[#A4C639] text-[#2D5A27] rounded-lg font-bold text-xs md:text-sm">{users.length} users</span>
+              </div>
             </div>
 
             {usersLoading ? (
@@ -524,6 +672,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span className="px-3 md:px-4 py-1 md:py-2 bg-[#A4C639] text-[#2D5A27] rounded-lg font-bold text-xs sm:text-sm">{bulkRequests.length} requests</span>
             </div>
 
+            {/* Pending Bulk Enquiries Alert Banner */}
+            {bulkRequests.filter(r => r.status === 'pending').length > 0 && (
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
+                  <div className="flex gap-3 md:gap-4 items-start flex-1">
+                    <div className="text-2xl md:text-3xl flex-shrink-0 pt-1">📋</div>
+                    <div className="flex-1">
+                      <h3 className="text-sm md:text-lg font-bold text-blue-900 mb-1">Bulk Requests Awaiting Review</h3>
+                      <p className="text-xs md:text-sm text-blue-800 mb-2">
+                        <strong>{bulkRequests.filter(r => r.status === 'pending').length} enquiry(ies)</strong> need customer contact & quote preparation.
+                      </p>
+                      <p className="text-[10px] md:text-xs text-blue-700">
+                        💡 <strong>Next Steps:</strong> Call customer → Understand requirements → Mark as "Contacted" → Send quote → Update to "Quoted"
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 text-2xl md:text-3xl flex-shrink-0">
+                    <span>⏳</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {bulkLoading ? (
               <div className="text-center py-12">
                 <p className="text-[#2D5A27]/60">Loading bulk requests...</p>
@@ -581,19 +752,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-[#2D5A27]/10">
-                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-2">Customer Details</p>
-                      <p className="text-xs md:text-sm text-[#2D5A27] font-mono break-all">{req.details}</p>
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-[#2D5A27]/5 flex justify-between items-center">
-                      <p className="text-[7px] md:text-[9px] text-[#2D5A27]/50 font-medium">
-                        {req.customerPhone && (
-                          <span>📞 {req.customerPhone}</span>
-                        )}
-                      </p>
-                      <p className="text-[7px] md:text-[9px] text-[#2D5A27]/50">
-                        {new Date(req.createdAt).toLocaleDateString()} {new Date(req.createdAt).toLocaleTimeString()}
-                      </p>
+                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-3">Customer Contact Info</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-[#FAF9F6] p-3 rounded-lg">
+                          <p className="text-[7px] md:text-[9px] font-bold text-[#2D5A27]/60 mb-1">Phone (Customer ID)</p>
+                          <a href={`tel:${req.customerPhone}`} className="text-xs md:text-sm font-bold text-[#108242] hover:underline">
+                            📞 {req.customerPhone || 'N/A'}
+                          </a>
+                        </div>
+                        <div className="bg-[#FAF9F6] p-3 rounded-lg">
+                          <p className="text-[7px] md:text-[9px] font-bold text-[#2D5A27]/60 mb-1">Event Type</p>
+                          <p className="text-xs md:text-sm font-bold text-[#2D5A27] capitalize">{req.eventType || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-[7px] md:text-[9px] font-bold text-blue-900 mb-2">Full Details</p>
+                        <p className="text-xs md:text-sm text-blue-800 font-mono whitespace-pre-wrap break-words">{req.details || 'N/A'}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -601,9 +776,243 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
         )}
+
+        {tab === 'error-logs' && (
+          <div className="animate-fade-in space-y-4 md:space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold serif text-[#4A3728]">System Error Logs</h2>
+              <span className={`px-3 md:px-4 py-1 md:py-2 rounded-lg font-bold text-xs sm:text-sm ${unresolvedErrorCount > 0 ? 'bg-red-100 text-red-900' : 'bg-green-100 text-green-900'}`}>
+                {unresolvedErrorCount} unresolved
+              </span>
+            </div>
+
+            {/* Unresolved Errors Alert */}
+            {unresolvedErrorCount > 0 && (
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
+                  <div className="flex gap-3 md:gap-4 items-start flex-1">
+                    <div className="text-2xl md:text-3xl flex-shrink-0 pt-1">🔴</div>
+                    <div className="flex-1">
+                      <h3 className="text-sm md:text-lg font-bold text-red-900 mb-1">System Errors Detected</h3>
+                      <p className="text-xs md:text-sm text-red-800 mb-2">
+                        <strong>{unresolvedErrorCount} unresolved error(s)</strong> require immediate attention.
+                      </p>
+                      <p className="text-[10px] md:text-xs text-red-700">
+                        💡 Check the error details below and take corrective action. Email notifications have been sent to support@deepthienterprise.com
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {errorLogsLoading ? (
+              <div className="text-center py-12">
+                <p className="text-[#2D5A27]/60">Loading error logs...</p>
+              </div>
+            ) : errorLogs.length === 0 ? (
+              <div className="bg-[#FAF9F6] p-8 md:p-12 rounded-2xl md:rounded-3xl text-center border border-[#2D5A27]/10">
+                <p className="text-[#2D5A27]/60 mb-2">✅ No errors detected</p>
+                <p className="text-[#2D5A27]/40 text-sm">System is running smoothly!</p>
+              </div>
+            ) : (
+              <div className="space-y-3 md:space-y-4">
+                {errorLogs.map((err: any) => (
+                  <div 
+                    key={err.id} 
+                    className={`bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border-2 shadow-sm hover:shadow-lg transition-all ${
+                      err.resolved ? 'border-green-200' : 'border-red-200'
+                    }`}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                      <div className="md:col-span-4">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-1">Error ID</p>
+                        <p className="font-mono text-xs md:text-sm font-bold text-[#2D5A27]">{err.id}</p>
+                      </div>
+                      <div className="md:col-span-4">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-1">Error Type</p>
+                        <p className="text-xs md:text-sm font-bold text-[#4A3728]">{err.errorType}</p>
+                      </div>
+                      <div className="md:col-span-4">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-1">Status</p>
+                        <span className={`inline-block text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-lg ${
+                          err.resolved ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'
+                        }`}>
+                          {err.resolved ? '✅ Resolved' : '🔴 Unresolved'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-[#2D5A27]/10">
+                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-2">Message</p>
+                      <p className="text-xs md:text-sm text-[#2D5A27] bg-gray-50 p-3 rounded-lg font-mono break-all">{err.errorMessage}</p>
+                    </div>
+
+                    {err.context && (
+                      <div className="mt-3 pt-3 border-t border-[#2D5A27]/10">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-2">Context</p>
+                        <p className="text-xs md:text-sm text-[#2D5A27] bg-blue-50 p-3 rounded-lg">{err.context}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-4 pt-4 border-t border-[#2D5A27]/5 flex justify-between items-center flex-wrap gap-3">
+                      <p className="text-[7px] md:text-[9px] text-[#2D5A27]/50">
+                        {new Date(err.createdAt).toLocaleDateString()} {new Date(err.createdAt).toLocaleTimeString()}
+                      </p>
+                      <p className="text-[7px] md:text-[9px] text-[#2D5A27]/50 font-mono">
+                        Source: {err.source}
+                      </p>
+                      {!err.resolved && (
+                        <button 
+                          onClick={() => {
+                            fetch(`/api/error-logs/${err.id}/resolve`, { method: 'PUT' })
+                              .then(() => {
+                                setErrorLogs(errorLogs.map(e => e.id === err.id ? {...e, resolved: 1} : e));
+                                setUnresolvedErrorCount(Math.max(0, unresolvedErrorCount - 1));
+                              });
+                          }}
+                          className="text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-3 md:px-4 py-1.5 md:py-2 bg-green-100 text-green-900 rounded-lg hover:bg-green-200 transition-all"
+                        >
+                          Mark Resolved
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'translations' && (
+          <div className="animate-fade-in space-y-4 md:space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-4">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold serif text-[#4A3728]">Translation Manager</h2>
+              <select 
+                value={selectedTranslationModule}
+                onChange={(e) => setSelectedTranslationModule(e.target.value)}
+                className="px-3 md:px-4 py-2 border border-[#2D5A27]/20 rounded-lg text-xs md:text-sm font-bold"
+              >
+                <option value="all">All Modules</option>
+                {translationModules.map(module => (
+                  <option key={module} value={module}>{module}</option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-xs md:text-sm text-[#2D5A27]/60 bg-blue-50 p-3 md:p-4 rounded-lg border border-blue-200">
+              💡 Edit all English and Telugu text from this page. Changes will be reflected throughout the application immediately.
+            </p>
+
+            {translationsLoading ? (
+              <div className="text-center py-12">
+                <p className="text-[#2D5A27]/60">Loading translations...</p>
+              </div>
+            ) : translations.length === 0 ? (
+              <div className="bg-[#FAF9F6] p-8 md:p-12 rounded-2xl md:rounded-3xl text-center border border-[#2D5A27]/10">
+                <p className="text-[#2D5A27]/60 mb-2">No translations found</p>
+                <p className="text-[#2D5A27]/40 text-sm">Start adding translations</p>
+              </div>
+            ) : (
+              <div className="space-y-3 md:space-y-4">
+                {(selectedTranslationModule === 'all' ? translations : translations.filter(t => t.module === selectedTranslationModule)).map((trans: any) => (
+                  <div 
+                    key={trans.id} 
+                    className={`bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border shadow-sm hover:shadow-lg transition-all ${
+                      editingTranslationId === trans.id ? 'border-[#108242] border-2' : 'border-[#2D5A27]/10'
+                    }`}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                      <div className="md:col-span-3">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-2">Key</p>
+                        <p className="font-mono text-xs md:text-sm font-bold text-[#2D5A27]">{trans.key}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#A4C639] mb-2">Module</p>
+                        <span className="inline-block text-xs md:text-sm font-bold px-2 md:px-3 py-1 bg-[#A4C639]/10 text-[#2D5A27] rounded-lg">
+                          {trans.module}
+                        </span>
+                      </div>
+                    </div>
+
+                    {editingTranslationId === trans.id ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#2D5A27] block mb-2">English</label>
+                            <input 
+                              type="text"
+                              value={editingTranslationData.textEn}
+                              onChange={(e) => setEditingTranslationData({...editingTranslationData, textEn: e.target.value})}
+                              className="w-full p-2 md:p-3 border border-[#2D5A27]/20 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#108242]"
+                              placeholder="English text"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#2D5A27] block mb-2">Telugu</label>
+                            <input 
+                              type="text"
+                              value={editingTranslationData.textTe}
+                              onChange={(e) => setEditingTranslationData({...editingTranslationData, textTe: e.target.value})}
+                              className="w-full p-2 md:p-3 border border-[#2D5A27]/20 rounded-lg text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#108242]"
+                              placeholder="Telugu text"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              fetch(`/api/translations/${trans.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(editingTranslationData)
+                              }).then(() => {
+                                setTranslations(translations.map(t => t.id === trans.id ? {...t, ...editingTranslationData} : t));
+                                setEditingTranslationId(null);
+                              });
+                            }}
+                            className="text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-3 md:px-4 py-1.5 md:py-2 bg-green-100 text-green-900 rounded-lg hover:bg-green-200 transition-all"
+                          >
+                            ✅ Save
+                          </button>
+                          <button 
+                            onClick={() => setEditingTranslationId(null)}
+                            className="text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-3 md:px-4 py-1.5 md:py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-all"
+                          >
+                            ✕ Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                          <div className="bg-[#FAF9F6] p-3 rounded-lg">
+                            <p className="text-[7px] md:text-[8px] font-bold text-[#2D5A27]/60 mb-1">English</p>
+                            <p className="text-xs md:text-sm text-[#2D5A27]">{trans.textEn}</p>
+                          </div>
+                          <div className="bg-[#FAF9F6] p-3 rounded-lg">
+                            <p className="text-[7px] md:text-[8px] font-bold text-[#2D5A27]/60 mb-1">Telugu</p>
+                            <p className="text-xs md:text-sm text-[#2D5A27]">{trans.textTe}</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditingTranslationId(trans.id);
+                            setEditingTranslationData({ textEn: trans.textEn, textTe: trans.textTe });
+                          }}
+                          className="text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-3 md:px-4 py-1.5 md:py-2 bg-blue-100 text-blue-900 rounded-lg hover:bg-blue-200 transition-all"
+                        >
+                          ✏️ Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-
 
       {/* Customer Management Modal */}
       {showCustomerManager && (
@@ -850,12 +1259,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full p-2 md:p-4 lg:p-6 bg-[#FAF9F6] rounded-lg md:rounded-[1.5rem] lg:rounded-[2rem] outline-none font-bold text-xs md:text-sm border border-transparent focus:border-[#A4C639]" />
                   </div>
                   <div>
-                    <label className="block text-[7px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-1 md:mb-2 lg:mb-3 ml-2">Category</label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as any})} className="w-full p-2 md:p-4 lg:p-6 bg-[#FAF9F6] rounded-lg md:rounded-[1.5rem] lg:rounded-[2rem] outline-none font-bold text-xs md:text-sm border border-transparent focus:border-[#A4C639]">
-                      <option value="plates">Plates</option>
-                      <option value="bowls">Bowls</option>
-                      <option value="organic">Organic</option>
-                      <option value="earthen">Earthen</option>
+                    <label className="block text-[7px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#2D5A27]/40 mb-1 md:mb-2 lg:mb-3 ml-2">Unit</label>
+                    <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value as any})} className="w-full p-2 md:p-4 lg:p-6 bg-[#FAF9F6] rounded-lg md:rounded-[1.5rem] lg:rounded-[2rem] outline-none font-bold text-xs md:text-sm border border-transparent focus:border-[#A4C639]">
+                      <option value="per piece">Per Piece</option>
+                      <option value="grams">Grams</option>
+                      <option value="kg">Kilogram (kg)</option>
+                      <option value="liter">Liter</option>
                     </select>
                   </div>
                 </div>

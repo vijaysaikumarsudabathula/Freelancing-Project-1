@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS products (
   name TEXT,
   name_te TEXT,
   price REAL,
-  category TEXT,
+  unit TEXT,
   description TEXT,
   description_te TEXT,
   image TEXT,
@@ -94,11 +94,11 @@ INSERT OR REPLACE INTO users (id, name, email, password, role, joinedDate) VALUE
 );
 
 -- Seed products
-INSERT OR REPLACE INTO products (id, name, name_te, price, category, description, description_te, image, benefits) VALUES
-('p1', 'Buffet Leaf Plate 12"', 'బఫే లీఫ్ ప్లేట్ 12"', 15, 'plates', 'Sustainable 12-inch buffet plate made from premium leaf. Perfect for lunch and dinner.', '12 అంగుళాల బఫే లీఫ్ ప్లేట్. భోజనానికి మరియు విందులకు అనుకూలం.', '/images/tiffin-plates-12inches.jpeg', '["100% Biodegradable","Plastic Free","Natural Aroma"]'),
-('p2', 'Buffet Leaf Plate 14"', 'బఫే లీఫ్ ప్లేట్ 14"', 18, 'plates', 'Extra-large 14-inch buffet plate for heavy festival meals. Hand-pressed organic leaf.', '14 అంగుళాల పెద్ద బఫే లీఫ్ ప్లేట్. పండుగ భోజనాలకు అనుకూలం.', '/images/buffet-leaf-plate-14.jpg', '["Heavy Duty","Heat Resistant","Compostable"]'),
-('p4', 'Prasadam Round Doppalu (Big)', 'ప్రసాదం రౌండ్ డొప్పలు (పెద్దవి)', 10, 'bowls', 'Large traditional round leaf bowls for temple offerings and full meals.', 'పెద్ద సైజు ప్రసాదం డొప్పలు. గుడి ప్రసాదం మరియు భోజనానికి అనుకూలం.', '/images/prasadam-round-cups.jpeg', '["Sturdy Design","Traditional","Zero Leakage"]'),
-('p8', 'Organic Forest Honey', 'అడవి తేనె', 580, 'organic', 'Pure, raw organic honey collected directly from deep forest regions.', 'అడవి నుండి సేకరించిన స్వచ్ఛమైన తేనె. ఎటువంటి కల్తీ లేనిది.', '/images/organic-forest-honey.jpg', '["Unprocessed","Medicinal","Wild Sourced"]');
+INSERT OR REPLACE INTO products (id, name, name_te, price, unit, description, description_te, image, benefits) VALUES
+('p1', 'Buffet Leaf Plate 12"', 'బఫే లీఫ్ ప్లేట్ 12"', 15, 'per piece', 'Sustainable 12-inch buffet plate made from premium leaf. Perfect for lunch and dinner.', '12 అంగుళాల బఫే లీఫ్ ప్లేట్. భోజనానికి మరియు విందులకు అనుకూలం.', '/images/tiffin-plates-12inches.jpeg', '["100% Biodegradable","Plastic Free","Natural Aroma"]'),
+('p2', 'Buffet Leaf Plate 14"', 'బఫే లీఫ్ ప్లేట్ 14"', 18, 'per piece', 'Extra-large 14-inch buffet plate for heavy festival meals. Hand-pressed organic leaf.', '14 అంగుళాల పెద్ద బఫే లీఫ్ ప్లేట్. పండుగ భోజనాలకు అనుకూలం.', '/images/buffet-leaf-plate-14.jpg', '["Heavy Duty","Heat Resistant","Compostable"]'),
+('p4', 'Prasadam Round Doppalu (Big)', 'ప్రసాదం రౌండ్ డొప్పలు (పెద్దవి)', 10, 'per piece', 'Large traditional round leaf bowls for temple offerings and full meals.', 'పెద్ద సైజు ప్రసాదం డొప్పలు. గుడి ప్రసాదం మరియు భోజనానికి అనుకూలం.', '/images/prasadam-round-cups.jpeg', '["Sturdy Design","Traditional","Zero Leakage"]'),
+('p8', 'Organic Forest Honey', 'అడవి తేనె', 580, 'liter', 'Pure, raw organic honey collected directly from deep forest regions.', 'అడవి నుండి సేకరించిన స్వచ్ఛమైన తేనె. ఎటువంటి కల్తీ లేనిది.', '/images/organic-forest-honey.jpg', '["Unprocessed","Medicinal","Wild Sourced"]');
 
 -- Sample demo customer removed by request (previous 'u-cust-1' entries deleted)
 -- If you want to re-add demo customers, add INSERTs here with IDs that follow the 'cust-' prefix to keep formats consistent.
