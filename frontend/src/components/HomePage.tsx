@@ -152,29 +152,6 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
     );
   };
-            onClick={() => handleAddToCart(product)}
-            className={`w-full py-2.5 md:py-3 rounded-lg font-bold text-xs md:text-sm uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
-              isAdding
-                ? 'bg-green-500 text-white'
-                : 'bg-gradient-to-r from-[#108242] to-[#0d6233] hover:from-[#0d6233] hover:to-[#0a4a25] text-white'
-            }`}
-          >
-            {isAdding ? (
-              <>
-                <span className="text-lg">✓</span>
-                {t.added}
-              </>
-            ) : (
-              <>
-                <span>🛒</span>
-                {t.addToCart}
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="animate-fade-in">
