@@ -464,7 +464,7 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center py-3 md:py-4">
           <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className="flex items-center group scale-75 md:scale-100">
             <img
-              src="/scr/images/deepthi-logo.png"
+              src="/images/deepthi-logo.png"
               alt="Deepthi"
               className="w-16 md:w-24 h-auto object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/deepthi-logo.png'; }}
