@@ -25,7 +25,12 @@ interface BackendStatus {
  */
 export async function checkBackendHealth(): Promise<BackendStatus> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/health`, {
+    // Construct health check URL - API_BASE_URL already includes /api
+    const healthUrl = API_BASE_URL.includes('/api') 
+      ? `${API_BASE_URL}/health` 
+      : `${API_BASE_URL}/api/health`;
+    
+    const response = await fetch(healthUrl, {
       method: 'GET',
       timeout: 5000 // 5 second timeout
     } as any);
@@ -85,7 +90,12 @@ export async function checkBackendHealth(): Promise<BackendStatus> {
  */
 export async function checkDetailedHealth() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/health/detailed`, {
+    // Construct detailed health check URL - API_BASE_URL already includes /api
+    const detailedHealthUrl = API_BASE_URL.includes('/api')
+      ? `${API_BASE_URL}/health/detailed`
+      : `${API_BASE_URL}/api/health/detailed`;
+    
+    const response = await fetch(detailedHealthUrl, {
       method: 'GET',
       timeout: 5000
     } as any);
@@ -110,6 +120,13 @@ export async function checkDetailedHealth() {
 export function startHealthCheck() {
   if (healthCheckInterval) {
     console.log('Health check already running');
+    return;
+  }
+
+  // Skip backend health check if no backend is configured (production without backend)
+  const isProductionWithoutBackend = API_BASE_URL === '/api' && !import.meta.env.DEV;
+  if (isProductionWithoutBackend) {
+    console.log('⚠️ Production without backend configured - skipping health checks');
     return;
   }
 
