@@ -11,7 +11,8 @@ let isFirstCheck = true;
 
 const HEALTH_CHECK_INTERVAL = 10_000; // Check every 10 seconds
 const FAILURE_THRESHOLD = 2; // Show warning after 2 failures
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+// Use Vite environment variable - defaults to /api (relative path for production)
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
 
 interface BackendStatus {
   isHealthy: boolean;
