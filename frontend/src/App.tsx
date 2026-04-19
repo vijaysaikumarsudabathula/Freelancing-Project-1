@@ -461,12 +461,12 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#FAF9F6]">
       <BackendStatusBanner />
       <nav className="fixed top-0 w-full z-[60] bg-white/90 backdrop-blur-xl border-b border-[#108242]/5 flex flex-col">
-        <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center py-3 md:py-4">
-          <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className="flex items-center group scale-75 md:scale-100">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 w-full flex justify-between items-center py-2 md:py-3">
+          <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className="flex items-center group scale-90 md:scale-100 flex-shrink-0">
             <img
               src="/images/deepthi-logo.png"
               alt="Deepthi"
-              className="w-16 md:w-24 h-auto object-contain"
+              className="w-14 sm:w-16 md:w-24 h-auto object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/deepthi-logo.png'; }}
             />
           </button>
@@ -488,36 +488,36 @@ const App: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex items-center space-x-2 md:space-x-6">
-            <div className="hidden sm:flex bg-[#FAF9F6] border border-gray-100 rounded-2xl p-1 shadow-inner">
+          <div className="flex items-center space-x-1 sm:space-x-3 md:space-x-6">
+            <div className="hidden sm:flex bg-[#FAF9F6] border border-gray-100 rounded-xl sm:rounded-2xl p-0.5 sm:p-1 shadow-inner">
               <button 
                 onClick={() => setCurrentLang('en')} 
-                className={`px-2 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
+                className={`px-1.5 sm:px-2 md:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl text-[7px] sm:text-[8px] md:text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
               >
                 EN
               </button>
               <button 
                 onClick={() => setCurrentLang('te')} 
-                className={`px-2 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
+                className={`px-1.5 sm:px-2 md:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl text-[7px] sm:text-[8px] md:text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#108242] text-white shadow-lg' : 'text-gray-400 hover:text-[#108242]'}`}
               >
                 TE
               </button>
             </div>
 
-            <button onClick={() => setIsCartOpen(true)} className={`relative p-2 md:p-3 rounded-full hover:bg-[#FAF9F6] transition-all ${cartAnimate ? 'scale-110' : ''}`}>
-              <svg className="h-5 md:h-6 w-5 md:w-6 text-[#108242]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onClick={() => setIsCartOpen(true)} className={`relative p-1 sm:p-2 md:p-3 rounded-full hover:bg-[#FAF9F6] transition-all flex-shrink-0 ${cartAnimate ? 'scale-110' : ''}`}>
+              <svg className="h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6 text-[#108242]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {cartItems.length > 0 && (
-                <span className="absolute top-0 right-0 bg-[#A4C639] text-white text-[7px] md:text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                <span className="absolute top-0 right-0 bg-[#A4C639] text-white text-[6px] sm:text-[7px] md:text-[8px] font-black w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white">
                   {cartItems.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
             </button>
 
             {user ? (
-              <div ref={userDropdownRef} className="flex items-center gap-2 md:gap-4 border-l border-gray-100 pl-2 md:pl-6 relative">
-                <button onClick={() => setShowUserDropdown(!showUserDropdown)} className="w-8 md:w-10 h-8 md:h-10 bg-[#FAF9F6] rounded-full flex items-center justify-center text-lg md:text-xl hover:scale-105 transition-transform border border-gray-100 shadow-sm">👤</button>
+              <div ref={userDropdownRef} className="flex items-center gap-1 sm:gap-2 md:gap-4 border-l border-gray-100 pl-1 sm:pl-2 md:pl-6 relative flex-shrink-0">
+                <button onClick={() => setShowUserDropdown(!showUserDropdown)} className="w-7 sm:w-8 md:w-10 h-7 sm:h-8 md:h-10 bg-[#FAF9F6] rounded-full flex items-center justify-center text-sm sm:text-lg md:text-xl hover:scale-105 transition-transform border border-gray-100 shadow-sm flex-shrink-0">👤</button>
                 
                 {showUserDropdown && (
                   <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl border border-[#108242]/10 overflow-hidden z-50 min-w-40 md:min-w-48">
@@ -552,7 +552,7 @@ const App: React.FC = () => {
                 )}
               </div>
             ) : (
-              <button onClick={() => setShowLogin(true)} className="hidden sm:block px-4 md:px-8 py-2 md:py-4 bg-[#108242] text-white rounded-xl md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#108242]/20 hover:-translate-y-0.5 transition-all">
+              <button onClick={() => setShowLogin(true)} className="hidden sm:block px-3 sm:px-4 md:px-8 py-1.5 sm:py-2 md:py-4 bg-[#108242] text-white rounded-lg md:rounded-2xl text-[7px] sm:text-[8px] md:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#108242]/20 hover:-translate-y-0.5 transition-all flex-shrink-0">
                 {t.login}
               </button>
             )}
@@ -560,9 +560,9 @@ const App: React.FC = () => {
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-[#FAF9F6] transition-all"
+              className="lg:hidden p-1 sm:p-2 rounded-lg hover:bg-[#FAF9F6] transition-all flex-shrink-0"
             >
-              <svg className="w-6 h-6 text-[#108242]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 sm:w-6 h-5 sm:h-6 text-[#108242]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
               </svg>
             </button>
@@ -571,7 +571,7 @@ const App: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3 animate-in fade-in slide-in-from-top-4">
+          <div className="lg:hidden bg-white border-t border-gray-100 px-2 sm:px-4 py-2 sm:py-4 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-top-4">
             {[
               { id: 'home', label: t.navHome },
               { id: 'shop', label: t.navShop },
@@ -581,27 +581,27 @@ const App: React.FC = () => {
               <button 
                 key={link.id}
                 onClick={() => { setCurrentView(link.id as any); setIsMobileMenuOpen(false); }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${currentView === link.id ? 'bg-[#108242] text-white' : 'text-[#108242]/60 hover:bg-[#FAF9F6]'}`}
+                className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all ${currentView === link.id ? 'bg-[#108242] text-white' : 'text-[#108242]/60 hover:bg-[#FAF9F6]'}`}
               >
                 {link.label}
               </button>
             ))}
-            <div className="flex gap-2 pt-3 border-t border-gray-100 sm:hidden">
+            <div className="flex gap-1.5 sm:gap-2 pt-2 sm:pt-3 border-t border-gray-100 sm:hidden">
               <button 
                 onClick={() => { setCurrentLang('en'); setIsMobileMenuOpen(false); }} 
-                className={`flex-1 py-2 rounded-lg text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#108242] text-white' : 'bg-[#FAF9F6] text-gray-400'}`}
+                className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[8px] sm:text-[9px] font-black transition-all ${currentLang === 'en' ? 'bg-[#108242] text-white' : 'bg-[#FAF9F6] text-gray-400'}`}
               >
                 EN
               </button>
               <button 
                 onClick={() => { setCurrentLang('te'); setIsMobileMenuOpen(false); }} 
-                className={`flex-1 py-2 rounded-lg text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#108242] text-white' : 'bg-[#FAF9F6] text-gray-400'}`}
+                className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[8px] sm:text-[9px] font-black transition-all ${currentLang === 'te' ? 'bg-[#108242] text-white' : 'bg-[#FAF9F6] text-gray-400'}`}
               >
                 TE
               </button>
             </div>
             {!user && (
-              <button onClick={() => { setShowLogin(true); setIsMobileMenuOpen(false); }} className="w-full mt-2 px-4 py-3 bg-[#108242] text-white rounded-xl text-[9px] font-black uppercase tracking-widest sm:hidden">
+              <button onClick={() => { setShowLogin(true); setIsMobileMenuOpen(false); }} className="w-full mt-1 sm:mt-2 px-3 sm:px-4 py-2 sm:py-3 bg-[#108242] text-white rounded-lg md:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest sm:hidden">
                 {t.login}
               </button>
             )}

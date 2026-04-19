@@ -163,29 +163,29 @@ const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* 2. Rotating Carousel Section */}
-      <section className="py-8 md:py-12 px-4 bg-white">
+      <section className="py-6 md:py-12 px-2 sm:px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className="mb-8 md:mb-10 text-center">
-            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[#A4C639] mb-3 block inline-block">
+          <div className="mb-6 md:mb-10 text-center px-2">
+            <span className="text-[8px] sm:text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[#A4C639] mb-2 sm:mb-3 block inline-block">
               ✨ {t.showProducts}
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold serif text-[#4A3728] mb-2">
+            <h2 className="text-xl sm:text-2xl md:text-5xl font-bold serif text-[#4A3728] mb-2 md:mb-2">
               {t.allProducts}
             </h2>
-            <p className="text-sm md:text-base text-gray-600">
+            <p className="text-[9px] sm:text-[10px] md:text-base text-gray-600">
               {t.noPlastic}
             </p>
           </div>
 
           {/* Carousel Container */}
           {isLoading ? (
-            <div className="bg-gray-200 rounded-2xl h-96 md:h-[520px] animate-pulse"></div>
+            <div className="bg-gray-200 rounded-xl md:rounded-2xl h-56 sm:h-72 md:h-[520px] animate-pulse"></div>
           ) : products.length > 0 ? (
             <div className="relative">
               {/* Main Carousel */}
-              <div className="relative h-96 md:h-[520px] mb-6">
-                <div className="absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="relative h-56 sm:h-80 md:h-[520px] mb-4 md:mb-6">
+                <div className="absolute inset-0 overflow-hidden rounded-xl md:rounded-2xl">
                   {/* Slides */}
                   <div
                     className="transition-transform duration-700 ease-in-out h-full"
@@ -197,11 +197,11 @@ const HomePage: React.FC<HomePageProps> = ({
                     {products.map((product) => (
                       <div
                         key={product.id}
-                        className="w-full h-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-[#FAF9F6] to-[#F0EEEA]"
+                        className="w-full h-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-[#FAF9F6] to-[#F0EEEA] overflow-y-auto"
                       >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 w-full max-w-4xl mx-auto px-6 md:px-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-8 w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-8 py-3 sm:py-4 md:py-8">
                           {/* Left: Large Product Image */}
-                          <div className="relative h-64 md:h-96 rounded-xl overflow-hidden">
+                          <div className="relative h-40 sm:h-56 md:h-96 rounded-lg md:rounded-xl overflow-hidden flex-shrink-0">
                             <img
                               src={product.image}
                               alt={lang === 'te' ? product.name_te : product.name}
@@ -215,32 +215,32 @@ const HomePage: React.FC<HomePageProps> = ({
                           </div>
 
                           {/* Right: Product Details */}
-                          <div className="flex flex-col justify-center">
-                            <h3 className="text-2xl md:text-4xl font-bold text-[#4A3728] mb-3 md:mb-4">
+                          <div className="flex flex-col justify-center min-w-0">
+                            <h3 className="text-lg sm:text-2xl md:text-4xl font-bold text-[#4A3728] mb-2 md:mb-4 line-clamp-2">
                               {lang === 'te' ? product.name_te : product.name}
                             </h3>
 
                             {/* Price & Unit */}
-                            <div className="mb-4">
-                              <p className="text-3xl md:text-4xl font-black text-[#108242] mb-1">
+                            <div className="mb-2 md:mb-4">
+                              <p className="text-xl sm:text-2xl md:text-4xl font-black text-[#108242] mb-0.5 md:mb-1">
                                 ₹{product.price}
                               </p>
-                              <p className="text-sm md:text-base text-gray-600 capitalize font-medium">
+                              <p className="text-xs sm:text-sm md:text-base text-gray-600 capitalize font-medium">
                                 {product.unit}
                               </p>
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm md:text-base text-gray-700 mb-6 md:mb-8 leading-relaxed">
+                            <p className="text-xs sm:text-sm md:text-base text-gray-700 mb-3 md:mb-6 leading-relaxed line-clamp-2 md:line-clamp-3">
                               {lang === 'te' ? product.description_te : product.description}
                             </p>
 
                             {/* Benefits */}
-                            <div className="mb-6 md:mb-8 flex flex-wrap gap-2">
-                              {product.benefits?.map((benefit, idx) => (
+                            <div className="mb-3 md:mb-6 flex flex-wrap gap-1 md:gap-2">
+                              {product.benefits?.slice(0, 2).map((benefit, idx) => (
                                 <span
                                   key={idx}
-                                  className="inline-block px-3 py-1 bg-[#A4C639]/20 text-[#108242] rounded-full text-xs md:text-sm font-semibold"
+                                  className="inline-block px-2 py-0.5 md:px-3 md:py-1 bg-[#A4C639]/20 text-[#108242] rounded-full text-[7px] sm:text-xs md:text-sm font-semibold whitespace-nowrap"
                                 >
                                   {benefit}
                                 </span>
@@ -248,10 +248,10 @@ const HomePage: React.FC<HomePageProps> = ({
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3 md:gap-4">
+                            <div className="flex gap-2 md:gap-4">
                               <button
                                 onClick={() => handleAddToCart(product)}
-                                className={`flex-1 py-3 md:py-4 rounded-lg font-bold text-sm md:text-base uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+                                className={`flex-1 py-2 md:py-4 rounded-lg font-bold text-[7px] sm:text-xs md:text-base uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 flex items-center justify-center gap-1 md:gap-2 min-h-[36px] md:min-h-[48px] ${
                                   addingToCartId === product.id
                                     ? 'bg-green-500 text-white'
                                     : 'bg-gradient-to-r from-[#108242] to-[#0d6233] hover:from-[#0d6233] hover:to-[#0a4a25] text-white'
@@ -259,20 +259,20 @@ const HomePage: React.FC<HomePageProps> = ({
                               >
                                 {addingToCartId === product.id ? (
                                   <>
-                                    <span className="text-lg">✓</span>
-                                    {t.added}
+                                    <span className="text-sm md:text-lg">✓</span>
+                                    <span className="hidden sm:inline">{t.added}</span>
                                   </>
                                 ) : (
                                   <>
                                     <span>🛒</span>
-                                    {t.addToCart}
+                                    <span className="hidden sm:inline">{t.addToCart}</span>
                                   </>
                                 )}
                               </button>
 
                               <button
                                 onClick={() => onToggleWishlist?.(product.id)}
-                                className="px-4 md:px-6 py-3 md:py-4 bg-white border-2 border-[#108242] text-2xl rounded-lg hover:bg-[#FAF9F6] transition-all shadow-md hover:shadow-lg"
+                                className="px-2 md:px-6 py-2 md:py-4 bg-white border-2 border-[#108242] text-xl md:text-2xl rounded-lg hover:bg-[#FAF9F6] transition-all shadow-md hover:shadow-lg min-h-[36px] md:min-h-[48px] flex items-center justify-center flex-shrink-0"
                               >
                                 {wishlist.includes(product.id) ? '❤️' : '🤍'}
                               </button>
@@ -284,44 +284,44 @@ const HomePage: React.FC<HomePageProps> = ({
                   </div>
                 </div>
 
-                {/* Navigation Buttons */}
+                {/* Navigation Buttons - Inside carousel area on mobile */}
                 <button
                   onClick={goPrev}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 md:-translate-x-16 z-20 w-10 h-10 md:w-12 md:h-12 bg-[#108242] hover:bg-[#0d6233] text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+                  className="absolute left-1 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-14 z-20 w-8 h-8 md:w-12 md:h-12 bg-[#108242] hover:bg-[#0d6233] text-white rounded-full flex items-center justify-center font-bold text-sm md:text-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
                 >
                   ❮
                 </button>
                 <button
                   onClick={goNext}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 md:translate-x-16 z-20 w-10 h-10 md:w-12 md:h-12 bg-[#108242] hover:bg-[#0d6233] text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+                  className="absolute right-1 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-14 z-20 w-8 h-8 md:w-12 md:h-12 bg-[#108242] hover:bg-[#0d6233] text-white rounded-full flex items-center justify-center font-bold text-sm md:text-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
                 >
                   ❯
                 </button>
               </div>
 
               {/* Dot Navigation */}
-              <div className="flex justify-center gap-2 md:gap-3 mb-8">
+              <div className="flex justify-center gap-1.5 md:gap-3 mb-4 md:mb-6">
                 {products.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToProduct(index)}
                     className={`transition-all duration-300 rounded-full ${
                       index === currentIndex
-                        ? 'bg-[#108242] w-10 md:w-12 h-3 md:h-3'
-                        : 'bg-gray-300 w-3 md:w-3 h-3 md:h-3 hover:bg-gray-400'
+                        ? 'bg-[#108242] w-6 md:w-12 h-2 md:h-3'
+                        : 'bg-gray-300 w-2 md:w-3 h-2 md:h-3 hover:bg-gray-400'
                     }`}
                   />
                 ))}
               </div>
 
               {/* Product Counter */}
-              <div className="text-center text-sm md:text-base text-gray-600 font-medium">
+              <div className="text-center text-xs md:text-base text-gray-600 font-medium">
                 {currentIndex + 1} / {products.length}
               </div>
             </div>
           ) : (
-            <div className="py-16 text-center">
-              <p className="text-gray-500 font-medium">
+            <div className="py-12 md:py-16 text-center">
+              <p className="text-gray-500 font-medium text-sm md:text-base">
                 {lang === 'en' ? 'No products available yet' : 'ఇంకా ఉత్పత్తులు అందుబాటులో లేవు'}
               </p>
             </div>
@@ -329,10 +329,10 @@ const HomePage: React.FC<HomePageProps> = ({
 
           {/* View All Button */}
           {products.length > 0 && (
-            <div className="mt-8 md:mt-12 flex justify-center">
+            <div className="mt-6 md:mt-10 flex justify-center px-2">
               <button
                 onClick={onExplore}
-                className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-[#108242] to-[#0d6233] hover:from-[#0d6233] hover:to-[#0a4a25] text-white rounded-lg md:rounded-xl font-bold text-sm md:text-base uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
+                className="px-6 md:px-12 py-2.5 md:py-4 bg-gradient-to-r from-[#108242] to-[#0d6233] hover:from-[#0d6233] hover:to-[#0a4a25] text-white rounded-lg md:rounded-xl font-bold text-[8px] sm:text-[10px] md:text-base uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 w-full md:w-auto"
               >
                 🔍 {t.viewAllWholesale}
               </button>
